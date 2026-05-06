@@ -613,6 +613,7 @@ class PaintApp {
             case 'line':
                 this.tempCtx.moveTo(this.startX, this.startY);
                 this.tempCtx.lineTo(x, y);
+                this.tempCtx.stroke();
                 break;
             case 'rect':
             case 'select-rect':
