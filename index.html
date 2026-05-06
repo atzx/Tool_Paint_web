@@ -210,36 +210,52 @@
             </div>
         </div>
 
-        <!-- Diálogo de texto -->
-        <div id="dialog-text" class="modal" style="display: none;">
-            <div class="modal-content">
-                <h3>Propiedades del texto</h3>
-                <div class="form-group">
-                    <label>Fuente:</label>
-                    <select id="text-font">
-                        <option value="Arial">Arial</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Courier New">Courier New</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Verdana">Verdana</option>
-                        <option value="Impact">Impact</option>
-                    </select>
+        <!-- Diálogo de texto / Fonts (flotante y movible) -->
+        <div id="dialog-text" style="display: none;">
+            <div id="fonts-header">
+                <span>Fonts</span>
+            </div>
+            <div id="fonts-body">
+                <div class="fonts-toolbar">
+                    <div class="fonts-group">
+                        <select id="text-font">
+                            <option value="Arial">Arial</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Impact">Impact</option>
+                            <option value="Comic Sans MS">Comic Sans MS</option>
+                            <option value="Trebuchet MS">Trebuchet MS</option>
+                            <option value="Palatino Linotype">Palatino Linotype</option>
+                            <option value="Lucida Console">Lucida Console</option>
+                            <option value="Tahoma">Tahoma</option>
+                            <option value="Segoe UI">Segoe UI</option>
+                        </select>
+                    </div>
+                    <div class="fonts-group">
+                        <input type="number" id="text-size" value="12" min="1" max="999" list="size-presets">
+                        <datalist id="size-presets">
+                            <option value="8"><option value="9"><option value="10">
+                            <option value="11"><option value="12"><option value="14">
+                            <option value="16"><option value="18"><option value="20">
+                            <option value="24"><option value="28"><option value="32">
+                            <option value="36"><option value="48"><option value="72">
+                        </datalist>
+                    </div>
+                    <button class="fonts-btn fonts-btn-toggle" id="text-bold" title="Bold"><b>B</b></button>
+                    <button class="fonts-btn fonts-btn-toggle" id="text-italic" title="Italic"><i>I</i></button>
+                    <button class="fonts-btn fonts-btn-toggle" id="text-underline" title="Underline"><u>U</u></button>
+                    <div class="fonts-vwm-wrapper">
+                        <button class="fonts-btn fonts-btn-toggle" id="text-vertical" title="Vertical Writing Mode">
+                            <span class="vwm-icon">V</span>
+                        </button>
+                        <div class="vwm-tooltip">Vertical writing is intended for Far East scripts.</div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Tamaño:</label>
-                    <input type="number" id="text-size" value="24" min="8" max="200">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="text-bold"> Negrita
-                    </label>
-                    <label>
-                        <input type="checkbox" id="text-italic"> Cursiva
-                    </label>
-                </div>
-                <div class="modal-actions">
-                    <button id="btn-apply-text">Aplicar</button>
-                    <button id="btn-cancel-text">Cancelar</button>
+                <div class="fonts-actions">
+                    <button id="btn-apply-text">Apply</button>
+                    <button id="btn-cancel-text">Cancel</button>
                 </div>
             </div>
         </div>

@@ -250,9 +250,9 @@ body {
 
 #text-input-container {
     position: absolute;
-    background: white;
-    border: 1px dashed #007acc;
+    background: rgba(255, 255, 255, 0.08);
     z-index: 100;
+    box-sizing: border-box;
 }
 
 #text-input {
@@ -428,7 +428,173 @@ body {
     gap: 24px;
 }
 
-/* Modales */
+/* Fonts: floating draggable panel */
+#dialog-text {
+    position: fixed;
+    top: 80px;
+    right: 30px;
+    background: #2d2d2d;
+    border: 1px solid #3c3c3c;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    z-index: 2000;
+    min-width: 480px;
+    user-select: none;
+}
+
+#fonts-header {
+    padding: 10px 16px;
+    background: #1e1e1e;
+    border-radius: 8px 8px 0 0;
+    cursor: move;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#fonts-body {
+    padding: 14px 16px;
+}
+
+.fonts-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.fonts-group select,
+.fonts-group input[type="number"] {
+    padding: 6px 10px;
+    background: #3c3c3c;
+    border: 1px solid #555;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 13px;
+    height: 34px;
+}
+
+.fonts-group select {
+    min-width: 150px;
+}
+
+.fonts-group input[type="number"] {
+    width: 70px;
+    text-align: center;
+}
+
+.fonts-group input[type="number"]:focus,
+.fonts-group select:focus {
+    outline: none;
+    border-color: #007acc;
+}
+
+/* Fonts toggle buttons */
+.fonts-btn {
+    width: 36px;
+    height: 36px;
+    background: #3c3c3c;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    color: #cccccc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transition: all 0.15s;
+}
+
+.fonts-btn:hover {
+    background: #505050;
+    border-color: #5a5a5a;
+}
+
+.fonts-btn.active {
+    background: #094771;
+    border-color: #007acc;
+    color: #ffffff;
+}
+
+.fonts-btn b,
+.fonts-btn i,
+.fonts-btn u {
+    font-size: 15px;
+}
+
+/* Vertical Writing Mode button + tooltip */
+.fonts-vwm-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.vwm-icon {
+    writing-mode: vertical-lr;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.vwm-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e1e1e;
+    color: #cccccc;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 3000;
+    border: 1px solid #3c3c3c;
+    margin-top: 6px;
+    pointer-events: none;
+}
+
+.fonts-vwm-wrapper:hover .vwm-tooltip {
+    display: block;
+}
+
+.fonts-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.fonts-actions button {
+    padding: 7px 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.fonts-actions button:first-child {
+    background: #007acc;
+    color: white;
+}
+
+.fonts-actions button:first-child:hover {
+    background: #005a9e;
+}
+
+.fonts-actions button:last-child {
+    background: #3c3c3c;
+    color: #e0e0e0;
+}
+
+.fonts-actions button:last-child:hover {
+    background: #505050;
+}
+
+/* Modales (nuevo doc, etc.) */
 .modal {
     position: fixed;
     top: 0;

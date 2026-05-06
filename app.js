@@ -41,6 +41,12 @@ class PaintApp {
         // Puntos para polígonos y lazo
         this.polygonPoints = [];
         this.lassoPoints = [];
+
+        // Texto
+        this.textBounds = null;
+        this.isDraggingFonts = false;
+        this.fontsDragOffsetX = 0;
+        this.fontsDragOffsetY = 0;
         
         // Inicialización
         this.init();
@@ -165,12 +171,25 @@ class PaintApp {
         document.getElementById('btn-cancel-new').addEventListener('click', () => this.hideNewDialog());
         document.getElementById('btn-apply-text').addEventListener('click', () => this.applyText());
         document.getElementById('btn-cancel-text').addEventListener('click', () => this.cancelText());
+
+        // Fonts toggle buttons
+        document.getElementById('text-bold').addEventListener('click', () => {
+            document.getElementById('text-bold').classList.toggle('active');
+        });
+        document.getElementById('text-italic').addEventListener('click', () => {
+            document.getElementById('text-italic').classList.toggle('active');
+        });
+        document.getElementById('text-underline').addEventListener('click', () => {
+            document.getElementById('text-underline').classList.toggle('active');
+        });
+        document.getElementById('text-vertical').addEventListener('click', () => {
+            document.getElementById('text-vertical').classList.toggle('active');
+        });
         
         // File input
         document.getElementById('file-input').addEventListener('change', (e) => this.loadImage(e));
         
         // Text input
-        document.getElementById('text-input').addEventListener('blur', () => this.applyText());
         document.getElementById('text-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -198,6 +217,9 @@ class PaintApp {
         
         // Paste from clipboard
         document.addEventListener('paste', (e) => this.handlePaste(e));
+
+        // Fonts dialog drag
+        this.initFontsDrag();
     }
     
     // ====================
@@ -394,6 +416,11 @@ class PaintApp {
         
         // Update cursor
         this.updateCursor();
+
+        // Cancel text mode if switching away
+        if (this.textBounds) {
+            this.cancelText();
+        }
     }
     
     updateCursor() {
@@ -457,7 +484,9 @@ class PaintApp {
                 this.pickColor(pos.x, pos.y);
                 break;
             case 'text':
-                this.startText(pos.x, pos.y);
+                if (this.textBounds) {
+                    this.cancelText();
+                }
                 break;
             case 'select-wand':
                 this.magicWand(Math.floor(pos.x), Math.floor(pos.y));
@@ -499,15 +528,18 @@ class PaintApp {
             case 'crop':
                 this.drawCropPreview(pos.x, pos.y);
                 break;
+            case 'text':
+                this.drawTextPreview(pos.x, pos.y);
+                break;
         }
-        
+
         this.lastX = pos.x;
         this.lastY = pos.y;
     }
-    
+
     handleMouseUp(e) {
         if (!this.isDrawing) return;
-        
+
         const pos = this.getMousePos(e);
         
         switch(this.currentTool) {
@@ -536,8 +568,11 @@ class PaintApp {
             case 'crop':
                 this.finalizeCrop(pos.x, pos.y);
                 break;
+            case 'text':
+                this.finalizeText(pos.x, pos.y);
+                break;
         }
-        
+
         this.isDrawing = false;
     }
     
@@ -1175,48 +1210,202 @@ class PaintApp {
     // ====================
     // TEXTO
     // ====================
-    
-    startText(x, y) {
-        this.textPos = {x, y};
+
+    drawTextPreview(x, y) {
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.tempCtx.strokeStyle = '#007acc';
+        this.tempCtx.lineWidth = 1;
+        this.tempCtx.setLineDash([5, 5]);
+        const minX = Math.min(this.startX, x);
+        const minY = Math.min(this.startY, y);
+        const w = Math.abs(x - this.startX);
+        const h = Math.abs(y - this.startY);
+        this.tempCtx.strokeRect(minX, minY, w, h);
+        this.tempCtx.setLineDash([]);
+    }
+
+    finalizeText(x, y) {
+        let minX = Math.min(this.startX, x);
+        let minY = Math.min(this.startY, y);
+        let w = Math.abs(x - this.startX);
+        let h = Math.abs(y - this.startY);
+
+        // Click without drag - use default size
+        if (w < 10 && h < 10) {
+            w = 200;
+            h = 60;
+        }
+
+        this.textBounds = { x: minX, y: minY, width: w, height: h };
+
+        // Draw dashed border for the text area
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.tempCtx.strokeStyle = '#007acc';
+        this.tempCtx.lineWidth = 1;
+        this.tempCtx.setLineDash([5, 5]);
+        this.tempCtx.strokeRect(minX, minY, w, h);
+        this.tempCtx.setLineDash([]);
+
+        this.showTextInput();
+        this.showFontsDialog();
+    }
+
+    showTextInput() {
         const container = document.getElementById('text-input-container');
         const input = document.getElementById('text-input');
-        
+
         container.style.display = 'block';
-        container.style.left = (x * this.zoom) + 'px';
-        container.style.top = (y * this.zoom) + 'px';
+        container.style.left = (this.textBounds.x * this.zoom) + 'px';
+        container.style.top = (this.textBounds.y * this.zoom) + 'px';
+        container.style.width = (this.textBounds.width * this.zoom) + 'px';
+        container.style.height = (this.textBounds.height * this.zoom) + 'px';
+
         input.value = '';
+        input.style.width = '100%';
+        input.style.height = '100%';
         input.focus();
-        
-        document.getElementById('dialog-text').style.display = 'flex';
     }
-    
+
     applyText() {
         const input = document.getElementById('text-input');
-        const text = input.value.trim();
-        
-        if (text && this.textPos) {
+        const text = input.value;
+
+        if (text && this.textBounds) {
             const layer = this.getActiveLayer();
             const font = document.getElementById('text-font').value;
-            const size = document.getElementById('text-size').value;
-            const bold = document.getElementById('text-bold').checked ? 'bold' : '';
-            const italic = document.getElementById('text-italic').checked ? 'italic' : '';
-            
-            layer.ctx.font = `${italic} ${bold} ${size}px ${font}`;
-            layer.ctx.fillStyle = this.primaryColor;
-            layer.ctx.fillText(text, this.textPos.x, this.textPos.y + parseInt(size));
-            
+            const size = parseInt(document.getElementById('text-size').value) || 12;
+            const bold = document.getElementById('text-bold').classList.contains('active');
+            const italic = document.getElementById('text-italic').classList.contains('active');
+            const underline = document.getElementById('text-underline').classList.contains('active');
+            const vertical = document.getElementById('text-vertical').classList.contains('active');
+
+            const ctx = layer.ctx;
+            ctx.fillStyle = this.primaryColor;
+            ctx.strokeStyle = this.primaryColor;
+            ctx.globalAlpha = this.brushOpacity / 100;
+
+            const fontStyle = italic ? 'italic ' : '';
+            const fontWeight = bold ? 'bold ' : '';
+            ctx.font = `${fontStyle}${fontWeight}${size}px ${font}`;
+            ctx.textBaseline = 'top';
+
+            const padding = 4;
+            let x = this.textBounds.x + padding;
+            let y = this.textBounds.y + padding;
+
+            if (vertical) {
+                // Vertical writing: characters flow top-to-bottom
+                const charSpacing = size + 2;
+                for (let char of text) {
+                    if (char === '\n') {
+                        x += size + 6;
+                        y = this.textBounds.y + padding;
+                        continue;
+                    }
+                    ctx.fillText(char, x, y);
+                    if (underline) {
+                        const charW = ctx.measureText(char).width;
+                        ctx.beginPath();
+                        ctx.moveTo(x + charW + 1, y);
+                        ctx.lineTo(x + charW + 1, y + size);
+                        ctx.stroke();
+                    }
+                    y += charSpacing;
+                    // Wrap to next column if past bottom
+                    if (y > this.textBounds.y + this.textBounds.height - padding - size) {
+                        x += size + 6;
+                        y = this.textBounds.y + padding;
+                    }
+                }
+            } else {
+                // Horizontal text with basic word wrapping
+                const maxWidth = this.textBounds.width - padding * 2;
+                const lines = [];
+                let line = '';
+                for (let char of text) {
+                    if (char === '\n') {
+                        lines.push(line);
+                        line = '';
+                        continue;
+                    }
+                    const testLine = line + char;
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && line.length > 0) {
+                        lines.push(line);
+                        line = char;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line);
+
+                const lineHeight = size * 1.4;
+                for (let i = 0; i < lines.length; i++) {
+                    const lineY = y + i * lineHeight;
+                    ctx.fillText(lines[i], x, lineY);
+
+                    if (underline) {
+                        const lineW = ctx.measureText(lines[i]).width;
+                        ctx.beginPath();
+                        ctx.moveTo(x, lineY + size + 2);
+                        ctx.lineTo(x + lineW, lineY + size + 2);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            ctx.textBaseline = 'alphabetic';
+            ctx.globalAlpha = 1;
             this.renderAllLayers();
             this.saveState();
         }
-        
+
         this.cancelText();
     }
-    
+
     cancelText() {
         document.getElementById('text-input-container').style.display = 'none';
         document.getElementById('dialog-text').style.display = 'none';
         document.getElementById('text-input').value = '';
-        this.textPos = null;
+        this.textBounds = null;
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        // Reset toggle buttons
+        ['text-bold', 'text-italic', 'text-underline', 'text-vertical'].forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+    }
+
+    showFontsDialog() {
+        const dialog = document.getElementById('dialog-text');
+        dialog.style.display = 'block';
+    }
+
+    initFontsDrag() {
+        const header = document.getElementById('fonts-header');
+        const dialog = document.getElementById('dialog-text');
+
+        header.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#fonts-header') !== header) return;
+            this.isDraggingFonts = true;
+            const rect = dialog.getBoundingClientRect();
+            this.fontsDragOffsetX = e.clientX - rect.left;
+            this.fontsDragOffsetY = e.clientY - rect.top;
+            dialog.style.cursor = 'move';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isDraggingFonts) return;
+            dialog.style.left = (e.clientX - this.fontsDragOffsetX) + 'px';
+            dialog.style.top = (e.clientY - this.fontsDragOffsetY) + 'px';
+            dialog.style.right = 'auto';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (this.isDraggingFonts) {
+                this.isDraggingFonts = false;
+                dialog.style.cursor = '';
+            }
+        });
     }
     
     // ====================
@@ -1479,6 +1668,9 @@ class PaintApp {
                     }
                     break;
                 case 'escape':
+                    if (this.textBounds) {
+                        this.cancelText();
+                    }
                     this.deselect();
                     this.polygonPoints = [];
                     this.lassoPoints = [];
