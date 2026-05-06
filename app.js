@@ -625,13 +625,15 @@ class PaintApp {
                 this.tempCtx.strokeRect(this.startX, this.startY, w, h);
                 break;
             case 'circle':
-                const radius = Math.sqrt(Math.pow(x - this.startX, 2) + Math.pow(y - this.startY, 2));
-                this.tempCtx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
+                const cx = (this.startX + x) / 2;
+                const cy = (this.startY + y) / 2;
+                const cr = Math.min(Math.abs(x - this.startX), Math.abs(y - this.startY)) / 2;
+                this.tempCtx.arc(cx, cy, cr, 0, Math.PI * 2);
                 if (this.fillShape) this.tempCtx.fill();
                 this.tempCtx.stroke();
                 break;
         }
-        
+
         this.tempCtx.setLineDash([]);
     }
 
@@ -674,8 +676,10 @@ class PaintApp {
                 ctx.strokeRect(this.startX, this.startY, w, h);
                 break;
             case 'circle':
-                const radius = Math.sqrt(Math.pow(x - this.startX, 2) + Math.pow(y - this.startY, 2));
-                ctx.arc(this.startX, this.startY, radius, 0, Math.PI * 2);
+                const cx = (this.startX + x) / 2;
+                const cy = (this.startY + y) / 2;
+                const cr = Math.min(Math.abs(x - this.startX), Math.abs(y - this.startY)) / 2;
+                ctx.arc(cx, cy, cr, 0, Math.PI * 2);
                 if (this.fillShape) ctx.fill();
                 ctx.stroke();
                 break;
