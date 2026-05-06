@@ -38,8 +38,9 @@ class PaintApp {
         this.selection = null;
         this.clipboard = null;
         
-        // Puntos para polígonos
+        // Puntos para polígonos y lazo
         this.polygonPoints = [];
+        this.lassoPoints = [];
         
         // Inicialización
         this.init();
@@ -177,6 +178,21 @@ class PaintApp {
             }
         });
         
+        // Double-click to finalize polygon
+        this.eventCanvas.addEventListener('dblclick', (e) => {
+            if (this.currentTool === 'polygon' && this.polygonPoints.length >= 3) {
+                this.finalizePolygon();
+            }
+        });
+
+        // Right-click to finalize polygon
+        this.eventCanvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (this.currentTool === 'polygon' && this.polygonPoints.length >= 3) {
+                this.finalizePolygon();
+            }
+        });
+
         // Keyboard shortcuts
         document.addEventListener('keydown', this.handleKeyboard.bind(this));
         
@@ -372,8 +388,9 @@ class PaintApp {
         document.getElementById('status-tool').textContent = 
             'Herramienta: ' + (toolNames[tool] || tool);
         
-        // Reset polygon points
+        // Reset polygon points and lasso points
         this.polygonPoints = [];
+        this.lassoPoints = [];
         
         // Update cursor
         this.updateCursor();
@@ -448,6 +465,9 @@ class PaintApp {
             case 'select-wand':
                 this.magicWand(Math.floor(pos.x), Math.floor(pos.y));
                 break;
+            case 'select-lasso':
+                this.lassoPoints = [{x: pos.x, y: pos.y}];
+                break;
             case 'crop':
                 this.startCrop(pos.x, pos.y);
                 break;
@@ -472,8 +492,14 @@ class PaintApp {
             case 'rect':
             case 'circle':
             case 'select-rect':
-            case 'select-lasso':
                 this.drawShapePreview(pos.x, pos.y);
+                break;
+            case 'select-lasso':
+                this.lassoPoints.push({x: pos.x, y: pos.y});
+                this.drawLassoPreview();
+                break;
+            case 'crop':
+                this.drawCropPreview(pos.x, pos.y);
                 break;
         }
         
@@ -503,8 +529,10 @@ class PaintApp {
                 this.drawShapeFinal(pos.x, pos.y);
                 break;
             case 'select-rect':
-            case 'select-lasso':
                 this.finalizeSelection(pos.x, pos.y);
+                break;
+            case 'select-lasso':
+                this.finalizeLassoSelection(pos.x, pos.y);
                 break;
             case 'crop':
                 this.finalizeCrop(pos.x, pos.y);
@@ -568,7 +596,7 @@ class PaintApp {
     drawShapePreview(x, y) {
         this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         
-        if (this.currentTool === 'select-rect' || this.currentTool === 'select-lasso') {
+        if (this.currentTool === 'select-rect') {
             this.tempCtx.strokeStyle = '#007acc';
             this.tempCtx.lineWidth = 1;
             this.tempCtx.setLineDash([5, 5]);
@@ -602,16 +630,27 @@ class PaintApp {
                 if (this.fillShape) this.tempCtx.fill();
                 this.tempCtx.stroke();
                 break;
-            case 'select-lasso':
-                this.tempCtx.moveTo(this.startX, this.startY);
-                this.tempCtx.lineTo(x, y);
-                this.tempCtx.stroke();
-                break;
         }
         
         this.tempCtx.setLineDash([]);
     }
-    
+
+    drawLassoPreview() {
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        if (this.lassoPoints.length < 2) return;
+
+        this.tempCtx.strokeStyle = '#007acc';
+        this.tempCtx.lineWidth = 1;
+        this.tempCtx.setLineDash([5, 5]);
+        this.tempCtx.beginPath();
+        this.tempCtx.moveTo(this.lassoPoints[0].x, this.lassoPoints[0].y);
+        for (let i = 1; i < this.lassoPoints.length; i++) {
+            this.tempCtx.lineTo(this.lassoPoints[i].x, this.lassoPoints[i].y);
+        }
+        this.tempCtx.stroke();
+        this.tempCtx.setLineDash([]);
+    }
+
     drawShapeFinal(x, y) {
         const layer = this.getActiveLayer();
         const ctx = layer.ctx;
@@ -817,6 +856,48 @@ class PaintApp {
         this.selectionCtx.setLineDash([]);
     }
     
+    finalizeLassoSelection(x, y) {
+        // Add last point to close the path
+        this.lassoPoints.push({x, y});
+
+        if (this.lassoPoints.length < 3) {
+            this.lassoPoints = [];
+            return;
+        }
+
+        // Calculate bounding box
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const p of this.lassoPoints) {
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+        }
+
+        this.selection = {
+            x: minX, y: minY,
+            width: maxX - minX, height: maxY - minY,
+            points: this.lassoPoints.slice()
+        };
+
+        this.lassoPoints = [];
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+        // Draw lasso path on selection canvas
+        this.selectionCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.selectionCtx.strokeStyle = '#007acc';
+        this.selectionCtx.lineWidth = 2;
+        this.selectionCtx.setLineDash([5, 5]);
+        this.selectionCtx.beginPath();
+        this.selectionCtx.moveTo(this.selection.points[0].x, this.selection.points[0].y);
+        for (let i = 1; i < this.selection.points.length; i++) {
+            this.selectionCtx.lineTo(this.selection.points[i].x, this.selection.points[i].y);
+        }
+        this.selectionCtx.closePath();
+        this.selectionCtx.stroke();
+        this.selectionCtx.setLineDash([]);
+    }
+
     selectAll() {
         this.selection = {
             x: 0,
@@ -841,7 +922,7 @@ class PaintApp {
         const ctx = layer.ctx;
         const imageData = ctx.getImageData(0, 0, this.canvasWidth, this.canvasHeight);
         const data = imageData.data;
-        
+
         const targetIdx = (startY * this.canvasWidth + startX) * 4;
         const targetColor = {
             r: data[targetIdx],
@@ -849,42 +930,50 @@ class PaintApp {
             b: data[targetIdx + 2],
             a: data[targetIdx + 3]
         };
-        
-        // Crear máscara de selección
-        const selectionCanvas = document.createElement('canvas');
-        selectionCanvas.width = this.canvasWidth;
-        selectionCanvas.height = this.canvasHeight;
-        const sctx = selectionCanvas.getContext('2d');
-        const sData = sctx.createImageData(this.canvasWidth, this.canvasHeight);
-        
+
+        // Clear selection canvas
+        this.selectionCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+        // Create selection mask on the actual selection canvas
+        const sData = this.selectionCtx.createImageData(this.canvasWidth, this.canvasHeight);
+
         const stack = [[startX, startY]];
         const visited = new Set();
         const tolerance = this.wandTolerance;
-        
+        let minX = startX, minY = startY, maxX = startX, maxY = startY;
+
         while (stack.length > 0) {
             const [x, y] = stack.pop();
             const key = `${x},${y}`;
-            
+
             if (x < 0 || x >= this.canvasWidth || y < 0 || y >= this.canvasHeight) continue;
             if (visited.has(key)) continue;
-            
+
             const idx = (y * this.canvasWidth + x) * 4;
-            
+
             const diff = Math.abs(data[idx] - targetColor.r) +
                         Math.abs(data[idx + 1] - targetColor.g) +
                         Math.abs(data[idx + 2] - targetColor.b) +
                         Math.abs(data[idx + 3] - targetColor.a);
-            
+
             if (diff <= tolerance * 4) {
                 sData.data[idx + 3] = 100; // Semi-transparente
                 visited.add(key);
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
                 stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
             }
         }
-        
-        sctx.putImageData(sData, 0, 0);
-        this.selectionCanvas = selectionCanvas;
-        this.renderAllLayers();
+
+        this.selectionCtx.putImageData(sData, 0, 0);
+
+        this.selection = {
+            x: minX, y: minY,
+            width: maxX - minX,
+            height: maxY - minY
+        };
     }
     
     // ====================
@@ -1001,7 +1090,16 @@ class PaintApp {
     // ====================
     // RECORTAR
     // ====================
-    
+
+    drawCropPreview(x, y) {
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.tempCtx.strokeStyle = '#ffffff';
+        this.tempCtx.lineWidth = 1;
+        this.tempCtx.setLineDash([5, 5]);
+        this.tempCtx.strokeRect(this.startX, this.startY, x - this.startX, y - this.startY);
+        this.tempCtx.setLineDash([]);
+    }
+
     startCrop(x, y) {
         this.cropStart = {x, y};
     }
@@ -1339,9 +1437,15 @@ class PaintApp {
                 case 's': this.setTool('select-lasso'); break;
                 case 'w': this.setTool('select-wand'); break;
                 case 't': this.setTool('text'); break;
+                case 'enter':
+                    if (this.currentTool === 'polygon' && this.polygonPoints.length >= 3) {
+                        this.finalizePolygon();
+                    }
+                    break;
                 case 'escape':
                     this.deselect();
                     this.polygonPoints = [];
+                    this.lassoPoints = [];
                     this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
                     break;
             }
