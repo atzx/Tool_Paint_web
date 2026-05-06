@@ -1655,7 +1655,7 @@ class PaintApp {
                 case 'f': this.setTool('bucket'); break;
                 case 'i': this.setTool('picker'); break;
                 case 'l': this.setTool('line'); break;
-                case 'r': this.setTool('rect'); break;
+                case 'r': this.setTool('crop'); break;
                 case 'c': this.setTool('circle'); break;
                 case 'o': this.setTool('polygon'); break;
                 case 'm': this.setTool('select-rect'); break;
