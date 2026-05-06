@@ -176,19 +176,27 @@ class PaintApp {
         document.getElementById('btn-apply-text').addEventListener('click', () => this.applyText());
         document.getElementById('btn-cancel-text').addEventListener('click', () => this.cancelText());
 
-        // Fonts toggle buttons
+        // Fonts toggle buttons — sync textarea on each toggle
         document.getElementById('text-bold').addEventListener('click', () => {
             document.getElementById('text-bold').classList.toggle('active');
+            this.syncTextareaFont();
         });
         document.getElementById('text-italic').addEventListener('click', () => {
             document.getElementById('text-italic').classList.toggle('active');
+            this.syncTextareaFont();
         });
         document.getElementById('text-underline').addEventListener('click', () => {
             document.getElementById('text-underline').classList.toggle('active');
+            this.syncTextareaFont();
         });
         document.getElementById('text-vertical').addEventListener('click', () => {
             document.getElementById('text-vertical').classList.toggle('active');
+            this.syncTextareaFont();
         });
+
+        // Font dropdown and size input — sync textarea on change
+        document.getElementById('text-font').addEventListener('change', () => this.syncTextareaFont());
+        document.getElementById('text-size').addEventListener('input', () => this.syncTextareaFont());
         
         // File input
         document.getElementById('file-input').addEventListener('change', (e) => this.loadImage(e));
@@ -1288,7 +1296,27 @@ class PaintApp {
         input.value = existingText || '';
         input.style.width = '100%';
         input.style.height = '100%';
+        this.syncTextareaFont();
         input.focus();
+    }
+
+    syncTextareaFont() {
+        const input = document.getElementById('text-input');
+        const font = document.getElementById('text-font').value;
+        const size = parseInt(document.getElementById('text-size').value) || 12;
+        const bold = document.getElementById('text-bold').classList.contains('active');
+        const italic = document.getElementById('text-italic').classList.contains('active');
+        const underline = document.getElementById('text-underline').classList.contains('active');
+        const vertical = document.getElementById('text-vertical').classList.contains('active');
+
+        input.style.fontFamily = font;
+        input.style.fontSize = size + 'px';
+        input.style.fontWeight = bold ? 'bold' : 'normal';
+        input.style.fontStyle = italic ? 'italic' : 'normal';
+        input.style.textDecoration = underline ? 'underline' : 'none';
+        input.style.writingMode = vertical ? 'vertical-rl' : 'horizontal-tb';
+        input.style.color = this.primaryColor;
+        input.style.textOrientation = vertical ? 'mixed' : 'initial';
     }
 
     applyText() {
@@ -1491,6 +1519,8 @@ class PaintApp {
         if (textObj.italic) document.getElementById('text-italic').classList.add('active');
         if (textObj.underline) document.getElementById('text-underline').classList.add('active');
         if (textObj.vertical) document.getElementById('text-vertical').classList.add('active');
+        // Sync textarea to the restored settings (showTextInput synced with defaults)
+        this.syncTextareaFont();
 
         this.showFontsDialog();
         this.textModeActive = true;
