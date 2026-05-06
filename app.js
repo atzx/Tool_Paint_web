@@ -47,6 +47,10 @@ class PaintApp {
         this.isDraggingFonts = false;
         this.fontsDragOffsetX = 0;
         this.fontsDragOffsetY = 0;
+        this.textObjects = [];
+        this.textIdCounter = 0;
+        this.textModeActive = false;
+        this.editingTextId = null;
         
         // Inicialización
         this.init();
@@ -273,7 +277,10 @@ class PaintApp {
             alert('Debe mantener al menos una capa');
             return;
         }
-        
+
+        const deletedLayerId = this.layers[this.activeLayerIndex].id;
+        // Remove associated text objects
+        this.textObjects = this.textObjects.filter(t => t.layerId !== deletedLayerId);
         this.layers.splice(this.activeLayerIndex, 1);
         this.activeLayerIndex = Math.max(0, this.activeLayerIndex - 1);
         this.saveState();
@@ -285,6 +292,14 @@ class PaintApp {
         if (index >= 0 && index < this.layers.length) {
             this.activeLayerIndex = index;
             this.updateLayersPanel();
+            // If text tool is active and layer has text, re-edit it
+            if (this.currentTool === 'text') {
+                const layer = this.layers[index];
+                const textObj = this.findTextObjectByLayerId(layer.id);
+                if (textObj && !this.textBounds) {
+                    this.loadTextForEditing(textObj);
+                }
+            }
         }
     }
     
@@ -304,14 +319,16 @@ class PaintApp {
     
     mergeDown() {
         if (this.activeLayerIndex === 0) return;
-        
+
         const current = this.getActiveLayer();
         const below = this.layers[this.activeLayerIndex - 1];
-        
+
         below.ctx.globalAlpha = current.opacity;
         below.ctx.drawImage(current.canvas, 0, 0);
         below.ctx.globalAlpha = 1;
-        
+
+        // Remove associated text objects
+        this.textObjects = this.textObjects.filter(t => t.layerId !== current.id);
         this.layers.splice(this.activeLayerIndex, 1);
         this.activeLayerIndex--;
         this.saveState();
@@ -486,6 +503,13 @@ class PaintApp {
             case 'text':
                 if (this.textBounds) {
                     this.cancelText();
+                }
+                // Check if clicking on existing text to re-edit
+                const existing = this.findTextObjectAt(pos.x, pos.y);
+                if (existing) {
+                    this.isDrawing = false;
+                    this.loadTextForEditing(existing);
+                    return;
                 }
                 break;
             case 'select-wand':
@@ -1246,11 +1270,12 @@ class PaintApp {
         this.tempCtx.strokeRect(minX, minY, w, h);
         this.tempCtx.setLineDash([]);
 
-        this.showTextInput();
+        this.showTextInput('');
         this.showFontsDialog();
+        this.textModeActive = true;
     }
 
-    showTextInput() {
+    showTextInput(existingText) {
         const container = document.getElementById('text-input-container');
         const input = document.getElementById('text-input');
 
@@ -1260,7 +1285,7 @@ class PaintApp {
         container.style.width = (this.textBounds.width * this.zoom) + 'px';
         container.style.height = (this.textBounds.height * this.zoom) + 'px';
 
-        input.value = '';
+        input.value = existingText || '';
         input.style.width = '100%';
         input.style.height = '100%';
         input.focus();
@@ -1271,7 +1296,6 @@ class PaintApp {
         const text = input.value;
 
         if (text && this.textBounds) {
-            const layer = this.getActiveLayer();
             const font = document.getElementById('text-font').value;
             const size = parseInt(document.getElementById('text-size').value) || 12;
             const bold = document.getElementById('text-bold').classList.contains('active');
@@ -1279,88 +1303,135 @@ class PaintApp {
             const underline = document.getElementById('text-underline').classList.contains('active');
             const vertical = document.getElementById('text-vertical').classList.contains('active');
 
-            const ctx = layer.ctx;
-            ctx.fillStyle = this.primaryColor;
-            ctx.strokeStyle = this.primaryColor;
-            ctx.globalAlpha = this.brushOpacity / 100;
-
-            const fontStyle = italic ? 'italic ' : '';
-            const fontWeight = bold ? 'bold ' : '';
-            ctx.font = `${fontStyle}${fontWeight}${size}px ${font}`;
-            ctx.textBaseline = 'top';
-
-            const padding = 4;
-            let x = this.textBounds.x + padding;
-            let y = this.textBounds.y + padding;
-
-            if (vertical) {
-                // Vertical writing: characters flow top-to-bottom
-                const charSpacing = size + 2;
-                for (let char of text) {
-                    if (char === '\n') {
-                        x += size + 6;
-                        y = this.textBounds.y + padding;
-                        continue;
-                    }
-                    ctx.fillText(char, x, y);
-                    if (underline) {
-                        const charW = ctx.measureText(char).width;
-                        ctx.beginPath();
-                        ctx.moveTo(x + charW + 1, y);
-                        ctx.lineTo(x + charW + 1, y + size);
-                        ctx.stroke();
-                    }
-                    y += charSpacing;
-                    // Wrap to next column if past bottom
-                    if (y > this.textBounds.y + this.textBounds.height - padding - size) {
-                        x += size + 6;
-                        y = this.textBounds.y + padding;
+            if (this.editingTextId) {
+                // Re-editing existing text — update in place
+                const textObj = this.textObjects.find(t => t.id === this.editingTextId);
+                if (textObj) {
+                    const layerIndex = this.layers.findIndex(l => l.id === textObj.layerId);
+                    if (layerIndex !== -1) {
+                        const layer = this.layers[layerIndex];
+                        // Clear the layer's canvas entirely (text is the only content)
+                        layer.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+                        // Update text data
+                        textObj.text = text;
+                        textObj.font = font;
+                        textObj.size = size;
+                        textObj.bold = bold;
+                        textObj.italic = italic;
+                        textObj.underline = underline;
+                        textObj.vertical = vertical;
+                        // Re-render with full text block
+                        this.renderTextOnLayer(layer.ctx, text, this.textBounds, { font, size, bold, italic, underline, vertical });
+                        this.renderAllLayers();
+                        this.saveState();
                     }
                 }
             } else {
-                // Horizontal text with basic word wrapping
-                const maxWidth = this.textBounds.width - padding * 2;
-                const lines = [];
-                let line = '';
-                for (let char of text) {
-                    if (char === '\n') {
-                        lines.push(line);
-                        line = '';
-                        continue;
-                    }
-                    const testLine = line + char;
-                    const metrics = ctx.measureText(testLine);
-                    if (metrics.width > maxWidth && line.length > 0) {
-                        lines.push(line);
-                        line = char;
-                    } else {
-                        line = testLine;
-                    }
-                }
-                lines.push(line);
+                // New text — create a new layer
+                const layer = this.createNewLayer('Texto');
+                this.renderTextOnLayer(layer.ctx, text, this.textBounds, { font, size, bold, italic, underline, vertical });
+                this.renderAllLayers();
+                this.saveState();
 
-                const lineHeight = size * 1.4;
-                for (let i = 0; i < lines.length; i++) {
-                    const lineY = y + i * lineHeight;
-                    ctx.fillText(lines[i], x, lineY);
-
-                    if (underline) {
-                        const lineW = ctx.measureText(lines[i]).width;
-                        ctx.beginPath();
-                        ctx.moveTo(x, lineY + size + 2);
-                        ctx.lineTo(x + lineW, lineY + size + 2);
-                        ctx.stroke();
-                    }
-                }
+                // Store text object for re-editing
+                this.textObjects.push({
+                    id: ++this.textIdCounter,
+                    text: text,
+                    x: this.textBounds.x,
+                    y: this.textBounds.y,
+                    width: this.textBounds.width,
+                    height: this.textBounds.height,
+                    font: font,
+                    size: size,
+                    bold: bold,
+                    italic: italic,
+                    underline: underline,
+                    vertical: vertical,
+                    color: this.primaryColor,
+                    opacity: this.brushOpacity,
+                    layerId: layer.id
+                });
             }
-
-            ctx.textBaseline = 'alphabetic';
-            ctx.globalAlpha = 1;
-            this.renderAllLayers();
-            this.saveState();
         }
 
+        this.textModeActive = false;
+        this.editingTextId = null;
         this.cancelText();
+    }
+
+    renderTextOnLayer(ctx, text, bounds, opts) {
+        ctx.fillStyle = this.primaryColor;
+        ctx.strokeStyle = this.primaryColor;
+        ctx.globalAlpha = this.brushOpacity / 100;
+
+        const fontStyle = opts.italic ? 'italic ' : '';
+        const fontWeight = opts.bold ? 'bold ' : '';
+        ctx.font = `${fontStyle}${fontWeight}${opts.size}px ${opts.font}`;
+        ctx.textBaseline = 'top';
+
+        const padding = 4;
+        let x = bounds.x + padding;
+        let y = bounds.y + padding;
+
+        if (opts.vertical) {
+            const charSpacing = opts.size + 2;
+            for (let char of text) {
+                if (char === '\n') {
+                    x += opts.size + 6;
+                    y = bounds.y + padding;
+                    continue;
+                }
+                ctx.fillText(char, x, y);
+                if (opts.underline) {
+                    const charW = ctx.measureText(char).width;
+                    ctx.beginPath();
+                    ctx.moveTo(x + charW + 1, y);
+                    ctx.lineTo(x + charW + 1, y + opts.size);
+                    ctx.stroke();
+                }
+                y += charSpacing;
+                if (y > bounds.y + bounds.height - padding - opts.size) {
+                    x += opts.size + 6;
+                    y = bounds.y + padding;
+                }
+            }
+        } else {
+            const maxWidth = bounds.width - padding * 2;
+            const lines = [];
+            let line = '';
+            for (let char of text) {
+                if (char === '\n') {
+                    lines.push(line);
+                    line = '';
+                    continue;
+                }
+                const testLine = line + char;
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && line.length > 0) {
+                    lines.push(line);
+                    line = char;
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            const lineHeight = opts.size * 1.4;
+            for (let i = 0; i < lines.length; i++) {
+                const lineY = y + i * lineHeight;
+                ctx.fillText(lines[i], x, lineY);
+                if (opts.underline) {
+                    const lineW = ctx.measureText(lines[i]).width;
+                    ctx.beginPath();
+                    ctx.moveTo(x, lineY + opts.size + 2);
+                    ctx.lineTo(x + lineW, lineY + opts.size + 2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        ctx.textBaseline = 'alphabetic';
+        ctx.globalAlpha = 1;
     }
 
     cancelText() {
@@ -1368,11 +1439,61 @@ class PaintApp {
         document.getElementById('dialog-text').style.display = 'none';
         document.getElementById('text-input').value = '';
         this.textBounds = null;
+        this.editingTextId = null;
+        this.textModeActive = false;
         this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-        // Reset toggle buttons
         ['text-bold', 'text-italic', 'text-underline', 'text-vertical'].forEach(id => {
             document.getElementById(id).classList.remove('active');
         });
+    }
+
+    findTextObjectAt(x, y) {
+        return this.textObjects.find(obj =>
+            x >= obj.x && x <= obj.x + obj.width &&
+            y >= obj.y && y <= obj.y + obj.height
+        );
+    }
+
+    findTextObjectByLayerId(layerId) {
+        return this.textObjects.find(obj => obj.layerId === layerId);
+    }
+
+    loadTextForEditing(textObj) {
+        this.editingTextId = textObj.id;
+        this.textBounds = {
+            x: textObj.x,
+            y: textObj.y,
+            width: textObj.width,
+            height: textObj.height
+        };
+
+        // Activate the text's layer
+        const layerIdx = this.layers.findIndex(l => l.id === textObj.layerId);
+        if (layerIdx !== -1) {
+            this.setActiveLayer(layerIdx);
+        }
+
+        // Draw dashed border
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.tempCtx.strokeStyle = '#007acc';
+        this.tempCtx.lineWidth = 1;
+        this.tempCtx.setLineDash([5, 5]);
+        this.tempCtx.strokeRect(textObj.x, textObj.y, textObj.width, textObj.height);
+        this.tempCtx.setLineDash([]);
+
+        // Show text input with existing content
+        this.showTextInput(textObj.text);
+
+        // Restore font settings in the Fonts dialog
+        document.getElementById('text-font').value = textObj.font;
+        document.getElementById('text-size').value = textObj.size;
+        if (textObj.bold) document.getElementById('text-bold').classList.add('active');
+        if (textObj.italic) document.getElementById('text-italic').classList.add('active');
+        if (textObj.underline) document.getElementById('text-underline').classList.add('active');
+        if (textObj.vertical) document.getElementById('text-vertical').classList.add('active');
+
+        this.showFontsDialog();
+        this.textModeActive = true;
     }
 
     showFontsDialog() {
@@ -1644,6 +1765,21 @@ class PaintApp {
                 case 's':
                     e.preventDefault();
                     this.saveImage('png');
+                    break;
+            }
+        } else if (this.textModeActive) {
+            // When editing text, only allow Enter and Escape
+            switch(e.key.toLowerCase()) {
+                case 'enter':
+                    if (this.currentTool === 'polygon' && this.polygonPoints.length >= 3) {
+                        this.finalizePolygon();
+                    }
+                    break;
+                case 'escape':
+                    if (this.textBounds) {
+                        this.cancelText();
+                    }
+                    this.deselect();
                     break;
             }
         } else {
