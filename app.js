@@ -353,6 +353,13 @@ class PaintApp {
             const item = document.createElement('div');
             item.className = 'layer-item' + (index === this.activeLayerIndex ? ' active' : '');
             item.onclick = () => this.setActiveLayer(index);
+            item.ondblclick = () => {
+                const textObj = this.findTextObjectByLayerId(layer.id);
+                if (textObj) {
+                    this.setTool('text');
+                    this.loadTextForEditing(textObj);
+                }
+            };
             
             const visibilityBtn = document.createElement('button');
             visibilityBtn.className = 'layer-visibility' + (layer.visible ? '' : ' hidden');
