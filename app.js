@@ -300,13 +300,12 @@ class PaintApp {
         if (index >= 0 && index < this.layers.length) {
             this.activeLayerIndex = index;
             this.updateLayersPanel();
-            // If text tool is active and layer has text, re-edit it
-            if (this.currentTool === 'text') {
-                const layer = this.layers[index];
-                const textObj = this.findTextObjectByLayerId(layer.id);
-                if (textObj && !this.textBounds) {
-                    this.loadTextForEditing(textObj);
-                }
+            // If layer has text, enter editing mode automatically
+            const layer = this.layers[index];
+            const textObj = this.findTextObjectByLayerId(layer.id);
+            if (textObj && !this.textBounds) {
+                this.setTool('text');
+                this.loadTextForEditing(textObj);
             }
         }
     }
@@ -353,13 +352,6 @@ class PaintApp {
             const item = document.createElement('div');
             item.className = 'layer-item' + (index === this.activeLayerIndex ? ' active' : '');
             item.onclick = () => this.setActiveLayer(index);
-            item.ondblclick = () => {
-                const textObj = this.findTextObjectByLayerId(layer.id);
-                if (textObj) {
-                    this.setTool('text');
-                    this.loadTextForEditing(textObj);
-                }
-            };
             
             const visibilityBtn = document.createElement('button');
             visibilityBtn.className = 'layer-visibility' + (layer.visible ? '' : ' hidden');
