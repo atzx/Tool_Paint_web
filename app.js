@@ -459,9 +459,6 @@ class PaintApp {
             case 'text':
                 this.startText(pos.x, pos.y);
                 break;
-            case 'polygon':
-                this.addPolygonPoint(pos.x, pos.y);
-                break;
             case 'select-wand':
                 this.magicWand(Math.floor(pos.x), Math.floor(pos.y));
                 break;
@@ -491,6 +488,7 @@ class PaintApp {
             case 'line':
             case 'rect':
             case 'circle':
+            case 'polygon':
             case 'select-rect':
                 this.drawShapePreview(pos.x, pos.y);
                 break;
@@ -526,6 +524,7 @@ class PaintApp {
             case 'line':
             case 'rect':
             case 'circle':
+            case 'polygon':
                 this.drawShapeFinal(pos.x, pos.y);
                 break;
             case 'select-rect':
@@ -632,6 +631,22 @@ class PaintApp {
                 if (this.fillShape) this.tempCtx.fill();
                 this.tempCtx.stroke();
                 break;
+            case 'polygon':
+                const pCx = (this.startX + x) / 2;
+                const pCy = (this.startY + y) / 2;
+                const pR = Math.min(Math.abs(x - this.startX), Math.abs(y - this.startY)) / 2;
+                this.tempCtx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 72 - 90) * Math.PI / 180;
+                    const px = pCx + pR * Math.cos(angle);
+                    const py = pCy + pR * Math.sin(angle);
+                    if (i === 0) this.tempCtx.moveTo(px, py);
+                    else this.tempCtx.lineTo(px, py);
+                }
+                this.tempCtx.closePath();
+                if (this.fillShape) this.tempCtx.fill();
+                this.tempCtx.stroke();
+                break;
         }
 
         this.tempCtx.setLineDash([]);
@@ -680,6 +695,22 @@ class PaintApp {
                 const cy = (this.startY + y) / 2;
                 const cr = Math.min(Math.abs(x - this.startX), Math.abs(y - this.startY)) / 2;
                 ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                if (this.fillShape) ctx.fill();
+                ctx.stroke();
+                break;
+            case 'polygon':
+                const pCx = (this.startX + x) / 2;
+                const pCy = (this.startY + y) / 2;
+                const pR = Math.min(Math.abs(x - this.startX), Math.abs(y - this.startY)) / 2;
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 72 - 90) * Math.PI / 180;
+                    const px = pCx + pR * Math.cos(angle);
+                    const py = pCy + pR * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
                 if (this.fillShape) ctx.fill();
                 ctx.stroke();
                 break;
