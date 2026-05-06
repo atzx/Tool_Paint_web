@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paint Pro - Editor de Imágenes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Barra de menú superior -->
+        <div id="menu-bar">
+            <div class="menu-group">
+                <button class="menu-btn" id="menu-file">Archivo</button>
+                <div class="menu-dropdown" id="dropdown-file">
+                    <button id="btn-new">Nuevo</button>
+                    <button id="btn-open">Abrir...</button>
+                    <button id="btn-save">Guardar como PNG</button>
+                    <button id="btn-save-jpg">Guardar como JPG</button>
+                    <hr>
+                    <button id="btn-export-layer">Exportar capa actual</button>
+                </div>
+            </div>
+            <div class="menu-group">
+                <button class="menu-btn" id="menu-edit">Edición</button>
+                <div class="menu-dropdown" id="dropdown-edit">
+                    <button id="btn-undo">Deshacer (Ctrl+Z)</button>
+                    <button id="btn-redo">Rehacer (Ctrl+Y)</button>
+                    <hr>
+                    <button id="btn-cut">Cortar (Ctrl+X)</button>
+                    <button id="btn-copy">Copiar (Ctrl+C)</button>
+                    <button id="btn-paste">Pegar (Ctrl+V)</button>
+                    <hr>
+                    <button id="btn-select-all">Seleccionar todo</button>
+                    <button id="btn-deselect">Deseleccionar</button>
+                </div>
+            </div>
+            <div class="menu-group">
+                <button class="menu-btn" id="menu-view">Ver</button>
+                <div class="menu-dropdown" id="dropdown-view">
+                    <button id="btn-zoom-in">Acercar (+)</button>
+                    <button id="btn-zoom-out">Alejar (-)</button>
+                    <button id="btn-zoom-reset">Restablecer zoom</button>
+                    <hr>
+                    <button id="btn-toggle-grid">Mostrar/Ocultar cuadrícula</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de herramientas lateral -->
+        <div id="toolbar">
+            <div class="tool-section">
+                <h4>Herramientas</h4>
+                <button class="tool-btn active" data-tool="brush" title="Pincel (B)">
+                    <svg viewBox="0 0 24 24"><path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34a.996.996 0 0 0-1.41 0L9 12.25 11.75 15l8.96-8.96a.996.996 0 0 0 0-1.41z"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="pencil" title="Lápiz (P)">
+                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="eraser" title="Borrador (E)">
+                    <svg viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.78-.78 2.05 0 2.83L5.03 20H12c.35 0 .69-.07 1-.18.31.11.65.18 1 .18h6c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-6.86zm-3.73 14l-2.58-2.58 6.09-6.09 2.58 2.58-6.09 6.09z"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="bucket" title="Rellenar (F)">
+                    <svg viewBox="0 0 24 24"><path d="M19 11.5s-2-2.5-4-2.5-4 2.5-4 2.5 2 2.5 4 2.5 4-2.5 4-2.5zm-11.73 2.73l-2.12-2.12c-.39-.39-.39-1.02 0-1.41l6.34-6.34c.39-.39 1.02-.39 1.41 0l2.12 2.12c.39.39.39 1.02 0 1.41l-6.34 6.34c-.39.39-1.02.39-1.41 0zM12.41 16l-2.83 2.83c-.39.39-.39 1.02 0 1.41l2.12 2.12c.39.39 1.02.39 1.41 0l2.83-2.83c.39-.39.39-1.02 0-1.41l-2.12-2.12c-.39-.39-1.02-.39-1.41 0z"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="picker" title="Cuentagotas (I)">
+                    <svg viewBox="0 0 24 24"><path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12c.4-.4.4-1.03.01-1.42zM5.25 19H5v-.25l7.07-7.07 1.06 1.06L5.25 19z"/></svg>
+                </button>
+            </div>
+
+            <div class="tool-section">
+                <h4>Formas</h4>
+                <button class="tool-btn" data-tool="line" title="Línea (L)">
+                    <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4" stroke="currentColor" stroke-width="2"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="rect" title="Rectángulo (R)">
+                    <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="circle" title="Círculo (C)">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="polygon" title="Polígono (O)">
+                    <svg viewBox="0 0 24 24"><polygon points="12,2 22,8 18,22 6,22 2,8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                </button>
+            </div>
+
+            <div class="tool-section">
+                <h4>Selección</h4>
+                <button class="tool-btn" data-tool="select-rect" title="Selección rectangular (M)">
+                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3,2"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="select-lasso" title="Lazo (S)">
+                    <svg viewBox="0 0 24 24"><path d="M3 8c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.43-.61 2.71-1.58 3.62l-2.42 6.38-2.42-6.38C6.61 10.71 6 9.43 6 8c0-1.1.9-2 2-2s2 .9 2 2c0 .55-.23 1.05-.59 1.41l1.41 1.41C11.95 10.05 12.45 10 13 10c2.76 0 5 2.24 5 5s-2.24 5-5 5c-1.43 0-2.71-.61-3.62-1.58l-6.38-2.42 6.38-2.42C9.71 13.61 11 13 12.41 13c1.1 0 2 .9 2 2s-.9 2-2 2c-.55 0-1.05-.23-1.41-.59l-1.41 1.41c.36.36.86.59 1.41.59 2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="select-wand" title="Varita mágica (W)">
+                    <svg viewBox="0 0 24 24"><path d="M7.5 5.6L5.7 4.3c-.3-.3-.8-.2-1 0-.3.3-.3.8 0 1l1.8 1.3c.3.3.8.2 1 0 .3-.3.3-.8 0-1zm12.8 12.8l-1.3-1.8c-.2-.3-.7-.3-1 0-.3.3-.3.8 0 1l1.3 1.8c.3.3.8.3 1 0 .3-.3.3-.8 0-1zM22 2l-1 5h-1l-1-5h1zm-5 5l-5 1v1l5 1v-3zM7 11l-5 1 5 1v-2z" fill="currentColor"/></svg>
+                </button>
+                <button class="tool-btn" data-tool="crop" title="Recortar">
+                    <svg viewBox="0 0 24 24"><path d="M7 17V1H5v4H1v2h4v10c0 1.1.9 2 2 2h10v4h2v-4h4v-2H7zm10-4V7c0-1.1-.9-2-2-2h-4v2h4v6h2z"/></svg>
+                </button>
+            </div>
+
+            <div class="tool-section">
+                <h4>Texto</h4>
+                <button class="tool-btn" data-tool="text" title="Texto (T)">
+                    <svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4z"/></svg>
+                </button>
+            </div>
+
+            <div class="tool-section">
+                <h4>Propiedades</h4>
+                <div class="property-group">
+                    <label>Color principal:</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="color-primary" value="#000000">
+                        <div class="color-preview" id="preview-primary" style="background: #000000;"></div>
+                    </div>
+                </div>
+                <div class="property-group">
+                    <label>Color secundario:</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="color-secondary" value="#ffffff">
+                        <div class="color-preview" id="preview-secondary" style="background: #ffffff;"></div>
+                    </div>
+                </div>
+                <div class="property-group">
+                    <label>Grosor: <span id="size-value">5</span>px</label>
+                    <input type="range" id="brush-size" min="1" max="100" value="5">
+                </div>
+                <div class="property-group">
+                    <label>Opacidad: <span id="opacity-value">100</span>%</label>
+                    <input type="range" id="brush-opacity" min="1" max="100" value="100">
+                </div>
+                <div class="property-group">
+                    <label>
+                        <input type="checkbox" id="fill-shape"> Rellenar formas
+                    </label>
+                </div>
+                <div class="property-group">
+                    <label>Tolerancia varita:</label>
+                    <input type="range" id="wand-tolerance" min="0" max="100" value="32">
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de trabajo principal -->
+        <div id="workspace">
+            <div id="canvas-container">
+                <div id="canvas-wrapper">
+                    <canvas id="main-canvas"></canvas>
+                    <canvas id="temp-canvas"></canvas>
+                    <canvas id="selection-canvas"></canvas>
+                    <canvas id="event-canvas"></canvas>
+                    <div id="text-input-container" style="display: none;">
+                        <textarea id="text-input" placeholder="Escribe aquí..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de capas -->
+        <div id="layers-panel">
+            <div class="panel-header">
+                <h3>Capas</h3>
+                <div class="panel-actions">
+                    <button id="btn-new-layer" title="Nueva capa">+</button>
+                    <button id="btn-delete-layer" title="Eliminar capa">−</button>
+                </div>
+            </div>
+            <div id="layers-list"></div>
+            <div class="panel-footer">
+                <label>Opacidad de capa:</label>
+                <input type="range" id="layer-opacity" min="0" max="100" value="100">
+                <button id="btn-merge-down">Fusionar abajo</button>
+            </div>
+        </div>
+
+        <!-- Barra de estado inferior -->
+        <div id="status-bar">
+            <span id="status-position">Posición: 0, 0</span>
+            <span id="status-size">Tamaño: 800 x 600</span>
+            <span id="status-zoom">Zoom: 100%</span>
+            <span id="status-tool">Herramienta: Pincel</span>
+        </div>
+
+        <!-- Diálogo de nuevo documento -->
+        <div id="dialog-new" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Nuevo documento</h3>
+                <div class="form-group">
+                    <label>Ancho (px):</label>
+                    <input type="number" id="new-width" value="800" min="1" max="5000">
+                </div>
+                <div class="form-group">
+                    <label>Alto (px):</label>
+                    <input type="number" id="new-height" value="600" min="1" max="5000">
+                </div>
+                <div class="form-group">
+                    <label>Fondo:</label>
+                    <select id="new-bg">
+                        <option value="transparent">Transparente</option>
+                        <option value="white">Blanco</option>
+                        <option value="black">Negro</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-create-new">Crear</button>
+                    <button id="btn-cancel-new">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diálogo de texto -->
+        <div id="dialog-text" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Propiedades del texto</h3>
+                <div class="form-group">
+                    <label>Fuente:</label>
+                    <select id="text-font">
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Impact">Impact</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tamaño:</label>
+                    <input type="number" id="text-size" value="24" min="8" max="200">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="text-bold"> Negrita
+                    </label>
+                    <label>
+                        <input type="checkbox" id="text-italic"> Cursiva
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-apply-text">Aplicar</button>
+                    <button id="btn-cancel-text">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="file-input" accept="image/*" style="display: none;">
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
