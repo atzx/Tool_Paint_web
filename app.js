@@ -425,6 +425,7 @@ class PaintApp {
             'round-rect': 'Rectángulo redondeado',
             'circle': 'Círculo',
             'polygon': 'Polígono',
+            'ellipse': 'Elipse',
             'select-rect': 'Selección rectangular',
             'select-lasso': 'Lazo',
             'select-wand': 'Varita mágica',
@@ -460,7 +461,8 @@ class PaintApp {
             'select-lasso': 'crosshair',
             'select-wand': 'crosshair',
             'crop': 'crosshair',
-            'round-rect': 'crosshair'
+            'round-rect': 'crosshair',
+            'ellipse': 'crosshair'
         };
         this.eventCanvas.style.cursor = cursors[this.currentTool] || 'default';
     }
@@ -550,6 +552,7 @@ class PaintApp {
             case 'line':
             case 'rect':
             case 'round-rect':
+            case 'ellipse':
             case 'circle':
             case 'polygon':
             case 'select-rect':
@@ -590,6 +593,7 @@ class PaintApp {
             case 'line':
             case 'rect':
             case 'round-rect':
+            case 'ellipse':
             case 'circle':
             case 'polygon':
                 this.drawShapeFinal(pos.x, pos.y);
@@ -713,6 +717,15 @@ class PaintApp {
                 if (this.fillShape) this.tempCtx.fill();
                 this.tempCtx.stroke();
                 break;
+            case 'ellipse':
+                const ex = (this.startX + x) / 2;
+                const ey = (this.startY + y) / 2;
+                const rx = Math.abs(x - this.startX) / 2;
+                const ry = Math.abs(y - this.startY) / 2;
+                this.tempCtx.ellipse(ex, ey, rx, ry, 0, 0, Math.PI * 2);
+                if (this.fillShape) this.tempCtx.fill();
+                this.tempCtx.stroke();
+                break;
             case 'polygon':
                 const pCx = (this.startX + x) / 2;
                 const pCy = (this.startY + y) / 2;
@@ -801,6 +814,15 @@ class PaintApp {
                 const cy = (this.startY + y) / 2;
                 const cr = Math.min(Math.abs(x - this.startX), Math.abs(y - this.startY)) / 2;
                 ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                if (this.fillShape) ctx.fill();
+                ctx.stroke();
+                break;
+            case 'ellipse':
+                const ex = (this.startX + x) / 2;
+                const ey = (this.startY + y) / 2;
+                const rx = Math.abs(x - this.startX) / 2;
+                const ry = Math.abs(y - this.startY) / 2;
+                ctx.ellipse(ex, ey, rx, ry, 0, 0, Math.PI * 2);
                 if (this.fillShape) ctx.fill();
                 ctx.stroke();
                 break;
@@ -1862,6 +1884,7 @@ class PaintApp {
                 case 'r': this.setTool('crop'); break;
                 case 'c': this.setTool('circle'); break;
                 case 'u': this.setTool('round-rect'); break;
+                case 'j': this.setTool('ellipse'); break;
                 case 'o': this.setTool('polygon'); break;
                 case 'm': this.setTool('select-rect'); break;
                 case 's': this.setTool('select-lasso'); break;
