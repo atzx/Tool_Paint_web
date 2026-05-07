@@ -162,6 +162,14 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 3px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    transition: border-color 0.15s;
+}
+
+.color-picker-wrapper.selected {
+    border-color: #007acc;
 }
 
 .color-picker-wrapper input[type="color"] {

@@ -62,6 +62,8 @@ class PaintApp {
         this.createNewLayer('Capa de fondo');
         this.saveState(); // Save initial blank state
         this.updateUI();
+        // Default: primary color selected
+        setTimeout(() => this.selectColorPicker('primary'), 0);
     }
     
     setupCanvas() {
@@ -117,10 +119,22 @@ class PaintApp {
             this.primaryColor = e.target.value;
             document.getElementById('preview-primary').style.background = e.target.value;
         });
-        
+        document.getElementById('color-primary').addEventListener('click', () => {
+            this.selectColorPicker('primary');
+        });
+        document.getElementById('preview-primary').addEventListener('click', () => {
+            document.getElementById('color-primary').click();
+        });
+
         document.getElementById('color-secondary').addEventListener('change', (e) => {
             this.secondaryColor = e.target.value;
             document.getElementById('preview-secondary').style.background = e.target.value;
+        });
+        document.getElementById('color-secondary').addEventListener('click', () => {
+            this.selectColorPicker('secondary');
+        });
+        document.getElementById('preview-secondary').addEventListener('click', () => {
+            document.getElementById('color-secondary').click();
         });
         
         // Property sliders
@@ -1909,8 +1923,13 @@ class PaintApp {
     }
     
     updateUI() {
-        document.getElementById('status-size').textContent = 
+        document.getElementById('status-size').textContent =
             `Tamaño: ${this.canvasWidth} x ${this.canvasHeight}`;
+    }
+
+    selectColorPicker(which) {
+        document.getElementById('color-primary').closest('.color-picker-wrapper').classList.toggle('selected', which === 'primary');
+        document.getElementById('color-secondary').closest('.color-picker-wrapper').classList.toggle('selected', which === 'secondary');
     }
 }
 
