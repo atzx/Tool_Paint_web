@@ -1904,6 +1904,10 @@ class PaintApp {
                 case 's': this.setTool('select-lasso'); break;
                 case 'w': this.setTool('select-wand'); break;
                 case 't': this.setTool('text'); break;
+                case 'x':
+                    const isPrimary = document.getElementById('color-primary').closest('.color-picker-wrapper').classList.contains('selected');
+                    this.selectColorPicker(isPrimary ? 'secondary' : 'primary');
+                    break;
                 case 'enter':
                     if (this.currentTool === 'polygon' && this.polygonPoints.length >= 3) {
                         this.finalizePolygon();
