@@ -422,6 +422,7 @@ class PaintApp {
             'picker': 'Cuentagotas',
             'line': 'Línea',
             'rect': 'Rectángulo',
+            'round-rect': 'Rectángulo redondeado',
             'circle': 'Círculo',
             'polygon': 'Polígono',
             'select-rect': 'Selección rectangular',
@@ -458,7 +459,8 @@ class PaintApp {
             'select-rect': 'crosshair',
             'select-lasso': 'crosshair',
             'select-wand': 'crosshair',
-            'crop': 'crosshair'
+            'crop': 'crosshair',
+            'round-rect': 'crosshair'
         };
         this.eventCanvas.style.cursor = cursors[this.currentTool] || 'default';
     }
@@ -547,6 +549,7 @@ class PaintApp {
                 break;
             case 'line':
             case 'rect':
+            case 'round-rect':
             case 'circle':
             case 'polygon':
             case 'select-rect':
@@ -586,6 +589,7 @@ class PaintApp {
                 break;
             case 'line':
             case 'rect':
+            case 'round-rect':
             case 'circle':
             case 'polygon':
                 this.drawShapeFinal(pos.x, pos.y);
@@ -690,6 +694,17 @@ class PaintApp {
                 }
                 this.tempCtx.strokeRect(this.startX, this.startY, w, h);
                 break;
+            case 'round-rect':
+                const rw = x - this.startX;
+                const rh = y - this.startY;
+                const rr = Math.min(Math.abs(rw), Math.abs(rh), 30);
+                if (this.fillShape) {
+                    this.roundRectPath(this.tempCtx, this.startX, this.startY, rw, rh, rr);
+                    this.tempCtx.fill();
+                }
+                this.roundRectPath(this.tempCtx, this.startX, this.startY, rw, rh, rr);
+                this.tempCtx.stroke();
+                break;
             case 'circle':
                 const cx = (this.startX + x) / 2;
                 const cy = (this.startY + y) / 2;
@@ -735,6 +750,19 @@ class PaintApp {
         this.tempCtx.setLineDash([]);
     }
 
+    roundRectPath(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        if (w < 0 && h < 0) {
+            ctx.roundRect(x + w, y + h, -w, -h, r);
+        } else if (w < 0) {
+            ctx.roundRect(x + w, y, -w, h, r);
+        } else if (h < 0) {
+            ctx.roundRect(x, y + h, w, -h, r);
+        } else {
+            ctx.roundRect(x, y, w, h, r);
+        }
+    }
+
     drawShapeFinal(x, y) {
         const layer = this.getActiveLayer();
         const ctx = layer.ctx;
@@ -756,6 +784,17 @@ class PaintApp {
                 const h = y - this.startY;
                 if (this.fillShape) ctx.fillRect(this.startX, this.startY, w, h);
                 ctx.strokeRect(this.startX, this.startY, w, h);
+                break;
+            case 'round-rect':
+                const rw = x - this.startX;
+                const rh = y - this.startY;
+                const rr = Math.min(Math.abs(rw), Math.abs(rh), 30);
+                if (this.fillShape) {
+                    this.roundRectPath(ctx, this.startX, this.startY, rw, rh, rr);
+                    ctx.fill();
+                }
+                this.roundRectPath(ctx, this.startX, this.startY, rw, rh, rr);
+                ctx.stroke();
                 break;
             case 'circle':
                 const cx = (this.startX + x) / 2;
@@ -1822,6 +1861,7 @@ class PaintApp {
                 case 'l': this.setTool('line'); break;
                 case 'r': this.setTool('crop'); break;
                 case 'c': this.setTool('circle'); break;
+                case 'u': this.setTool('round-rect'); break;
                 case 'o': this.setTool('polygon'); break;
                 case 'm': this.setTool('select-rect'); break;
                 case 's': this.setTool('select-lasso'); break;
