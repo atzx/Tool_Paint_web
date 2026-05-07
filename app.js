@@ -191,6 +191,7 @@ class PaintApp {
         // Layer buttons
         document.getElementById('btn-new-layer').addEventListener('click', () => this.addLayer());
         document.getElementById('btn-delete-layer').addEventListener('click', () => this.deleteLayer());
+        document.getElementById('btn-delete-layer-x').addEventListener('click', () => this.deleteLayer());
         document.getElementById('btn-merge-down').addEventListener('click', () => this.mergeDown());
         document.getElementById('layer-opacity').addEventListener('input', (e) => {
             this.setLayerOpacity(parseInt(e.target.value));

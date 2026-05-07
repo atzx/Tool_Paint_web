@@ -330,6 +330,25 @@ body {
 .panel-header h3 {
     font-size: 13px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#btn-delete-layer-x {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    border-radius: 3px;
+    transition: background 0.15s;
+}
+
+#btn-delete-layer-x:hover {
+    background: rgba(231, 76, 60, 0.2);
 }
 
 .panel-actions {
