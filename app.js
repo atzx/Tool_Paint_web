@@ -644,10 +644,10 @@ class PaintApp {
             ctx.strokeStyle = 'rgba(0,0,0,1)';
         } else {
             ctx.globalCompositeOperation = 'source-over';
-            ctx.strokeStyle = this.primaryColor;
-            ctx.fillStyle = this.primaryColor;
+            ctx.strokeStyle = this.getActiveColor();
+            ctx.fillStyle = this.getActiveColor();
         }
-        
+
         ctx.lineWidth = this.brushSize;
         ctx.lineCap = this.currentTool === 'pencil' ? 'butt' : 'round';
         ctx.lineJoin = this.currentTool === 'pencil' ? 'miter' : 'round';
@@ -688,13 +688,13 @@ class PaintApp {
             this.tempCtx.lineWidth = 1;
             this.tempCtx.setLineDash([5, 5]);
         } else {
-            this.tempCtx.strokeStyle = this.primaryColor;
-            this.tempCtx.fillStyle = this.primaryColor;
+            this.tempCtx.strokeStyle = this.getActiveColor();
+            this.tempCtx.fillStyle = this.getActiveColor();
             this.tempCtx.lineWidth = this.brushSize;
             this.tempCtx.globalAlpha = this.brushOpacity / 100;
             this.tempCtx.setLineDash([]);
         }
-        
+
         this.tempCtx.beginPath();
         
         switch(this.currentTool) {
@@ -794,12 +794,12 @@ class PaintApp {
         const layer = this.getActiveLayer();
         const ctx = layer.ctx;
         
-        ctx.strokeStyle = this.primaryColor;
-        ctx.fillStyle = this.primaryColor;
+        ctx.strokeStyle = this.getActiveColor();
+        ctx.fillStyle = this.getActiveColor();
         ctx.lineWidth = this.brushSize;
         ctx.globalAlpha = this.brushOpacity / 100;
         ctx.beginPath();
-        
+
         switch(this.currentTool) {
             case 'line':
                 ctx.moveTo(this.startX, this.startY);
@@ -870,14 +870,14 @@ class PaintApp {
         this.polygonPoints.push({x, y});
         
         // Dibujar punto temporal
-        this.tempCtx.fillStyle = this.primaryColor;
+        this.tempCtx.fillStyle = this.getActiveColor();
         this.tempCtx.beginPath();
         this.tempCtx.arc(x, y, 3, 0, Math.PI * 2);
         this.tempCtx.fill();
-        
+
         if (this.polygonPoints.length > 1) {
             const prev = this.polygonPoints[this.polygonPoints.length - 2];
-            this.tempCtx.strokeStyle = this.primaryColor;
+            this.tempCtx.strokeStyle = this.getActiveColor();
             this.tempCtx.lineWidth = this.brushSize;
             this.tempCtx.beginPath();
             this.tempCtx.moveTo(prev.x, prev.y);
@@ -899,8 +899,8 @@ class PaintApp {
         const layer = this.getActiveLayer();
         const ctx = layer.ctx;
         
-        ctx.strokeStyle = this.primaryColor;
-        ctx.fillStyle = this.primaryColor;
+        ctx.strokeStyle = this.getActiveColor();
+        ctx.fillStyle = this.getActiveColor();
         ctx.lineWidth = this.brushSize;
         ctx.globalAlpha = this.brushOpacity / 100;
         
@@ -937,7 +937,7 @@ class PaintApp {
         const targetB = data[targetIdx + 2];
         const targetA = data[targetIdx + 3];
         
-        const fillColor = this.hexToRgb(this.primaryColor);
+        const fillColor = this.hexToRgb(this.getActiveColor());
         const fillA = Math.floor((this.brushOpacity / 100) * 255);
         
         if (targetR === fillColor.r && targetG === fillColor.g && 
@@ -1389,7 +1389,7 @@ class PaintApp {
         input.style.fontStyle = italic ? 'italic' : 'normal';
         input.style.textDecoration = underline ? 'underline' : 'none';
         input.style.writingMode = vertical ? 'vertical-rl' : 'horizontal-tb';
-        input.style.color = this.primaryColor;
+        input.style.color = this.getActiveColor();
         input.style.textOrientation = vertical ? 'mixed' : 'initial';
     }
 
@@ -1423,7 +1423,7 @@ class PaintApp {
                         textObj.underline = underline;
                         textObj.vertical = vertical;
                         // Re-render with full text block
-                        this.renderTextOnLayer(layer.ctx, text, this.textBounds, { font, size, bold, italic, underline, vertical });
+                        this.renderTextOnLayer(layer.ctx, text, this.textBounds, { font, size, bold, italic, underline, vertical, color: textObj.color });
                         this.renderAllLayers();
                         this.saveState();
                     }
@@ -1431,7 +1431,7 @@ class PaintApp {
             } else {
                 // New text — create a new layer
                 const layer = this.createNewLayer('Texto');
-                this.renderTextOnLayer(layer.ctx, text, this.textBounds, { font, size, bold, italic, underline, vertical });
+                this.renderTextOnLayer(layer.ctx, text, this.textBounds, { font, size, bold, italic, underline, vertical }); // color from getActiveColor()
                 this.renderAllLayers();
                 this.saveState();
 
@@ -1449,7 +1449,7 @@ class PaintApp {
                     italic: italic,
                     underline: underline,
                     vertical: vertical,
-                    color: this.primaryColor,
+                    color: this.getActiveColor(),
                     opacity: this.brushOpacity,
                     layerId: layer.id
                 });
@@ -1462,8 +1462,8 @@ class PaintApp {
     }
 
     renderTextOnLayer(ctx, text, bounds, opts) {
-        ctx.fillStyle = this.primaryColor;
-        ctx.strokeStyle = this.primaryColor;
+        ctx.fillStyle = opts.color || this.getActiveColor();
+        ctx.strokeStyle = opts.color || this.getActiveColor();
         ctx.globalAlpha = this.brushOpacity / 100;
 
         const fontStyle = opts.italic ? 'italic ' : '';
@@ -1930,6 +1930,11 @@ class PaintApp {
     selectColorPicker(which) {
         document.getElementById('color-primary').closest('.color-picker-wrapper').classList.toggle('selected', which === 'primary');
         document.getElementById('color-secondary').closest('.color-picker-wrapper').classList.toggle('selected', which === 'secondary');
+    }
+
+    getActiveColor() {
+        const primarySelected = document.getElementById('color-primary').closest('.color-picker-wrapper').classList.contains('selected');
+        return primarySelected ? this.primaryColor : this.secondaryColor;
     }
 }
 
