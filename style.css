@@ -147,6 +147,40 @@ body {
     fill: currentColor;
 }
 
+.bg-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.bg-btn {
+    width: 40px;
+    height: 40px;
+    background: #3c3c3c;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    color: #cccccc;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-btn:hover {
+    background: #505050;
+    border-color: #5a5a5a;
+}
+
+.bg-btn.active {
+    background: #094771;
+    border-color: #007acc;
+}
+
+.bg-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
 .property-group {
     margin-bottom: 12px;
 }
@@ -695,6 +729,13 @@ body {
 
 .modal-actions button:last-child:hover {
     background: #505050;
+}
+
+/* Indicador visual de drag & drop */
+#workspace.drag-over {
+    background: #2a2a2a;
+    outline: 3px dashed #007acc;
+    outline-offset: -6px;
 }
 
 /* Cuadrícula */

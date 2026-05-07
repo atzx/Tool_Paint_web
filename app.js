@@ -51,6 +51,13 @@ class PaintApp {
         this.textIdCounter = 0;
         this.textModeActive = false;
         this.editingTextId = null;
+
+        // Selector tool
+        this.selectorPhase = null; // 'select' | 'move' | null
+        this.moveCanvas = null;
+        this.moveOffsetX = 0;
+        this.moveOffsetY = 0;
+        this.moveLayer = null;
         
         // Inicialización
         this.init();
@@ -155,7 +162,12 @@ class PaintApp {
         document.getElementById('fill-shape').addEventListener('change', (e) => {
             this.fillShape = e.target.checked;
         });
-        
+
+        // Background buttons
+        document.querySelectorAll('.bg-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.setBackground(btn.id));
+        });
+
         // Menu buttons
         document.getElementById('btn-new').addEventListener('click', () => this.showNewDialog());
         document.getElementById('btn-open').addEventListener('click', () => this.openImage());
@@ -243,6 +255,13 @@ class PaintApp {
         
         // Paste from clipboard
         document.addEventListener('paste', (e) => this.handlePaste(e));
+
+        // Drag and drop images onto canvas
+        const workspace = document.getElementById('workspace');
+        workspace.addEventListener('dragover', (e) => { e.preventDefault(); workspace.classList.add('drag-over'); });
+        workspace.addEventListener('dragenter', (e) => { e.preventDefault(); workspace.classList.add('drag-over'); });
+        workspace.addEventListener('dragleave', (e) => { e.preventDefault(); workspace.classList.remove('drag-over'); });
+        workspace.addEventListener('drop', (e) => { e.preventDefault(); workspace.classList.remove('drag-over'); this.handleDropImage(e); });
 
         // Fonts dialog drag
         this.initFontsDrag();
@@ -430,6 +449,7 @@ class PaintApp {
         
         const toolNames = {
             'brush': 'Pincel',
+            'selector': 'Selector',
             'pencil': 'Lápiz',
             'eraser': 'Borrador',
             'bucket': 'Rellenar',
@@ -453,7 +473,10 @@ class PaintApp {
         // Reset polygon points and lasso points
         this.polygonPoints = [];
         this.lassoPoints = [];
-        
+        this.selectorPhase = null;
+        this.moveCanvas = null;
+        this.moveLayer = null;
+
         // Update cursor
         this.updateCursor();
 
@@ -466,6 +489,7 @@ class PaintApp {
     updateCursor() {
         const cursors = {
             'brush': 'crosshair',
+            'selector': 'default',
             'pencil': 'crosshair',
             'eraser': 'cell',
             'bucket': 'pointer',
@@ -507,9 +531,11 @@ class PaintApp {
         this.lastX = pos.x;
         this.lastY = pos.y;
         
-        const layer = this.getActiveLayer();
-        if (!layer || !layer.visible || layer.locked) return;
-        
+        if (this.currentTool !== 'selector') {
+            const layer = this.getActiveLayer();
+            if (!layer || !layer.visible || layer.locked) return;
+        }
+
         this.isDrawing = true;
         
         switch(this.currentTool) {
@@ -546,9 +572,30 @@ class PaintApp {
             case 'crop':
                 this.startCrop(pos.x, pos.y);
                 break;
+            case 'selector':
+                if (this.selection && this.isInsideSelection(pos.x, pos.y)) {
+                    this.selectorPhase = 'move';
+                    this.moveOffsetX = pos.x - this.selection.x;
+                    this.moveOffsetY = pos.y - this.selection.y;
+                    this.captureSelectionContent();
+                } else {
+                    this.deselect();
+                    // Try to grab entire layer content under cursor
+                    const targetLayer = this.findLayerAtPoint(pos.x, pos.y);
+                    if (targetLayer) {
+                        this.selectorPhase = 'move';
+                        this.moveLayer = targetLayer;
+                        this.moveOffsetX = pos.x;
+                        this.moveOffsetY = pos.y;
+                        this.captureLayerContent(targetLayer);
+                    } else {
+                        this.selectorPhase = 'select';
+                    }
+                }
+                break;
         }
     }
-    
+
     handleMouseMove(e) {
         const pos = this.getMousePos(e);
         
@@ -581,6 +628,14 @@ class PaintApp {
                 break;
             case 'text':
                 this.drawTextPreview(pos.x, pos.y);
+                break;
+            case 'selector':
+                if (this.selectorPhase === 'select') {
+                    this.drawShapePreview(pos.x, pos.y);
+                } else if (this.selectorPhase === 'move') {
+                    if (this.moveLayer) this.drawLayerMovePreview(pos.x, pos.y);
+                    else this.drawMovePreview(pos.x, pos.y);
+                }
                 break;
         }
 
@@ -623,6 +678,15 @@ class PaintApp {
                 break;
             case 'text':
                 this.finalizeText(pos.x, pos.y);
+                break;
+            case 'selector':
+                if (this.selectorPhase === 'select') {
+                    this.finalizeSelection(pos.x, pos.y);
+                } else if (this.selectorPhase === 'move') {
+                    if (this.moveLayer) this.finalizeLayerMove(pos.x, pos.y);
+                    else this.finalizeMove(pos.x, pos.y);
+                }
+                this.selectorPhase = null;
                 break;
         }
 
@@ -1215,28 +1279,11 @@ class PaintApp {
             this.pasteFromClipboard(this.clipboard.canvas);
         }
     }
-    
-    pasteFromClipboard(canvas) {
-        // Create new layer for pasted image
-        const newLayer = this.createNewLayer('Imagen pegada');
-        
-        // Resize layer canvas if needed
-        if (canvas.width > this.canvasWidth || canvas.height > this.canvasHeight) {
-            newLayer.canvas.width = canvas.width;
-            newLayer.canvas.height = canvas.height;
-            newLayer.ctx.drawImage(canvas, 0, 0);
-            
-            // Resize main canvas to fit
-            this.canvasWidth = Math.max(this.canvasWidth, canvas.width);
-            this.canvasHeight = Math.max(this.canvasHeight, canvas.height);
-            this.resizeCanvas();
-        } else {
-            // Center the pasted image
-            const offsetX = Math.floor((this.canvasWidth - canvas.width) / 2);
-            const offsetY = Math.floor((this.canvasHeight - canvas.height) / 2);
-            newLayer.ctx.drawImage(canvas, offsetX, offsetY);
-        }
-        
+
+    pasteFromClipboard(source) {
+        const layer = this.createNewLayer('Imagen pegada');
+        const fit = this.getImageFit(source.width, source.height);
+        layer.ctx.drawImage(source, fit.offsetX, fit.offsetY, fit.width, fit.height);
         this.renderAllLayers();
         this.saveState();
     }
@@ -1244,7 +1291,7 @@ class PaintApp {
     handlePaste(e) {
         e.preventDefault();
         const items = e.clipboardData.items;
-        
+
         for (let item of items) {
             if (item.type.indexOf('image') !== -1) {
                 const blob = item.getAsFile();
@@ -1260,6 +1307,27 @@ class PaintApp {
                     URL.revokeObjectURL(url);
                 };
                 img.src = url;
+            }
+        }
+    }
+
+    handleDropImage(e) {
+        const files = e.dataTransfer.files;
+        for (let file of files) {
+            if (file.type.indexOf('image') !== -1) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const layer = this.createNewLayer(file.name);
+                        const fit = this.getImageFit(img.width, img.height);
+                        layer.ctx.drawImage(img, fit.offsetX, fit.offsetY, fit.width, fit.height);
+                        this.renderAllLayers();
+                        this.saveState();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         }
     }
@@ -1739,31 +1807,21 @@ class PaintApp {
     loadImage(e) {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         const reader = new FileReader();
         reader.onload = (event) => {
             const img = new Image();
             img.onload = () => {
-                // Crear nueva capa para la imagen
                 const layer = this.createNewLayer(file.name);
-                layer.canvas.width = img.width;
-                layer.canvas.height = img.height;
-                layer.ctx.drawImage(img, 0, 0);
-                
-                // Ajustar tamaño del canvas si es necesario
-                if (img.width > this.canvasWidth || img.height > this.canvasHeight) {
-                    this.canvasWidth = Math.max(this.canvasWidth, img.width);
-                    this.canvasHeight = Math.max(this.canvasHeight, img.height);
-                    this.resizeCanvas();
-                }
-                
+                const fit = this.getImageFit(img.width, img.height);
+                layer.ctx.drawImage(img, fit.offsetX, fit.offsetY, fit.width, fit.height);
                 this.renderAllLayers();
                 this.saveState();
             };
             img.src = event.target.result;
         };
         reader.readAsDataURL(file);
-        
+
         e.target.value = '';
     }
     
@@ -1890,6 +1948,7 @@ class PaintApp {
             // Atajos de herramientas
             switch(e.key.toLowerCase()) {
                 case 'b': this.setTool('brush'); break;
+                case 'v': this.setTool('selector'); break;
                 case 'p': this.setTool('pencil'); break;
                 case 'e': this.setTool('eraser'); break;
                 case 'f': this.setTool('bucket'); break;
@@ -1929,6 +1988,184 @@ class PaintApp {
     updateUI() {
         document.getElementById('status-size').textContent =
             `Tamaño: ${this.canvasWidth} x ${this.canvasHeight}`;
+    }
+
+    // ====================
+    // SELECTOR / MOVER
+    // ====================
+
+    isInsideSelection(x, y) {
+        if (!this.selection) return false;
+        return x >= this.selection.x &&
+               x <= this.selection.x + this.selection.width &&
+               y >= this.selection.y &&
+               y <= this.selection.y + this.selection.height;
+    }
+
+    findLayerAtPoint(x, y) {
+        for (let i = this.layers.length - 1; i >= 0; i--) {
+            const layer = this.layers[i];
+            if (!layer.visible) continue;
+            const pixel = layer.ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+            if (pixel[3] > 0) return layer;
+        }
+        return null;
+    }
+
+    captureSelectionContent() {
+        if (!this.selection) return;
+
+        const composite = document.createElement('canvas');
+        composite.width = this.canvasWidth;
+        composite.height = this.canvasHeight;
+        const ctx = composite.getContext('2d');
+
+        this.layers.forEach(layer => {
+            if (layer.visible) {
+                ctx.drawImage(layer.canvas, 0, 0);
+            }
+        });
+
+        this.moveCanvas = document.createElement('canvas');
+        this.moveCanvas.width = this.selection.width;
+        this.moveCanvas.height = this.selection.height;
+        const mctx = this.moveCanvas.getContext('2d');
+        mctx.drawImage(composite,
+            this.selection.x, this.selection.y,
+            this.selection.width, this.selection.height,
+            0, 0,
+            this.selection.width, this.selection.height
+        );
+    }
+
+    captureLayerContent(layer) {
+        this.moveCanvas = document.createElement('canvas');
+        this.moveCanvas.width = this.canvasWidth;
+        this.moveCanvas.height = this.canvasHeight;
+        const mctx = this.moveCanvas.getContext('2d');
+        mctx.drawImage(layer.canvas, 0, 0);
+    }
+
+    drawMovePreview(x, y) {
+        if (!this.selection || !this.moveCanvas) return;
+
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+        const newX = x - this.moveOffsetX;
+        const newY = y - this.moveOffsetY;
+
+        this.tempCtx.drawImage(this.moveCanvas, newX, newY);
+
+        // Update selection border to follow
+        this.selectionCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.selectionCtx.strokeStyle = '#007acc';
+        this.selectionCtx.lineWidth = 2;
+        this.selectionCtx.setLineDash([5, 5]);
+        this.selectionCtx.strokeRect(newX, newY, this.selection.width, this.selection.height);
+        this.selectionCtx.setLineDash([]);
+    }
+
+    drawLayerMovePreview(x, y) {
+        if (!this.moveCanvas) return;
+
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+        const newX = x - this.moveOffsetX;
+        const newY = y - this.moveOffsetY;
+
+        this.tempCtx.drawImage(this.moveCanvas, newX, newY);
+    }
+
+    finalizeMove(x, y) {
+        if (!this.selection || !this.moveCanvas) return;
+
+        const newX = x - this.moveOffsetX;
+        const newY = y - this.moveOffsetY;
+
+        // Clear original area from all visible layers
+        this.layers.forEach(layer => {
+            if (layer.visible) {
+                layer.ctx.clearRect(
+                    this.selection.x,
+                    this.selection.y,
+                    this.selection.width,
+                    this.selection.height
+                );
+            }
+        });
+
+        // Paste content at new position on active layer
+        const layer = this.getActiveLayer();
+        layer.ctx.drawImage(this.moveCanvas, newX, newY);
+
+        // Update selection to new position
+        this.selection.x = newX;
+        this.selection.y = newY;
+
+        this.moveCanvas = null;
+
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.renderAllLayers();
+        this.drawSelectionBorder();
+        this.saveState();
+    }
+
+    finalizeLayerMove(x, y) {
+        if (!this.moveCanvas || !this.moveLayer) return;
+
+        const newX = x - this.moveOffsetX;
+        const newY = y - this.moveOffsetY;
+
+        // Clear the source layer completely
+        this.moveLayer.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+        // Redraw content at new position (may be partially or fully off-canvas)
+        this.moveLayer.ctx.drawImage(this.moveCanvas, newX, newY);
+
+        this.moveCanvas = null;
+        this.moveLayer = null;
+
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.renderAllLayers();
+        this.saveState();
+    }
+
+    setBackground(bgId) {
+        // Toggle active class
+        document.querySelectorAll('.bg-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.id === bgId);
+        });
+
+        const layer = this.getActiveLayer();
+        if (!layer) return;
+
+        layer.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+        if (bgId === 'bg-white') {
+            layer.ctx.fillStyle = '#ffffff';
+            layer.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+        } else if (bgId === 'bg-black') {
+            layer.ctx.fillStyle = '#000000';
+            layer.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+        }
+        // bg-transparent: just cleared, nothing to fill
+
+        // Update layer preview thumbnails
+        this.renderAllLayers();
+        this.updateLayersPanel();
+        this.saveState();
+    }
+
+    getImageFit(imgWidth, imgHeight) {
+        const scale = Math.min(this.canvasWidth / imgWidth, this.canvasHeight / imgHeight);
+        const width = Math.floor(imgWidth * scale);
+        const height = Math.floor(imgHeight * scale);
+        return {
+            width,
+            height,
+            offsetX: Math.floor((this.canvasWidth - width) / 2),
+            offsetY: Math.floor((this.canvasHeight - height) / 2)
+        };
     }
 
     selectColorPicker(which) {
