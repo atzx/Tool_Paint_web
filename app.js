@@ -1292,9 +1292,11 @@ class PaintApp {
     handlePaste(e) {
         e.preventDefault();
         const items = e.clipboardData.items;
+        let found = false;
 
         for (let item of items) {
             if (item.type.indexOf('image') !== -1) {
+                found = true;
                 const blob = item.getAsFile();
                 const url = URL.createObjectURL(blob);
                 const img = new Image();
@@ -1309,6 +1311,11 @@ class PaintApp {
                 };
                 img.src = url;
             }
+        }
+
+        // Fallback to internal clipboard if no image in system clipboard
+        if (!found && this.clipboard) {
+            this.pasteFromClipboard(this.clipboard.canvas);
         }
     }
 
@@ -1910,8 +1917,7 @@ class PaintApp {
                     this.copy();
                     break;
                 case 'v':
-                    e.preventDefault();
-                    this.paste();
+                    // Don't prevent default — let the paste event handle all clipboard data
                     break;
                 case 'x':
                     e.preventDefault();
