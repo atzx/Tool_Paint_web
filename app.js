@@ -182,6 +182,7 @@ class PaintApp {
         document.getElementById('btn-paste').addEventListener('click', () => this.paste());
         document.getElementById('btn-select-all').addEventListener('click', () => this.selectAll());
         document.getElementById('btn-deselect').addEventListener('click', () => this.deselect());
+        document.getElementById('btn-clear-canvas').addEventListener('click', () => this.clearCanvas());
         
         document.getElementById('btn-zoom-in').addEventListener('click', () => this.zoomIn());
         document.getElementById('btn-zoom-out').addEventListener('click', () => this.zoomOut());
@@ -2134,6 +2135,23 @@ class PaintApp {
 
         this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.renderAllLayers();
+        this.saveState();
+    }
+
+    clearCanvas() {
+        // Remove all layers and create a single clean default layer
+        this.layers = [];
+        this.layerIdCounter = 0;
+        this.history = [];
+        this.historyStep = -1;
+        this.selection = null;
+        this.selectionCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.deselect();
+
+        this.createNewLayer('Capa de fondo');
+        this.renderAllLayers();
+        this.updateLayersPanel();
         this.saveState();
     }
 
