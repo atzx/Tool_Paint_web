@@ -663,13 +663,71 @@ class PaintApp {
     updateLayersPanel() {
         const container = document.getElementById('layers-list');
         container.innerHTML = '';
-        
+
         this.layers.slice().reverse().forEach((layer, reversedIndex) => {
             const index = this.layers.length - 1 - reversedIndex;
             const item = document.createElement('div');
             item.className = 'layer-item' + (index === this.activeLayerIndex ? ' active' : '');
+            item.dataset.layerId = layer.id;
+            item.draggable = true;
             item.onclick = () => this.setActiveLayer(index);
-            
+
+            // Drag and drop events
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', layer.id);
+                item.classList.add('dragging');
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = item.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                item.classList.remove('drag-over-top', 'drag-over-bottom');
+                if (y < rect.height / 2) {
+                    item.classList.add('drag-over-top');
+                } else {
+                    item.classList.add('drag-over-bottom');
+                }
+            });
+
+            item.addEventListener('dragleave', () => {
+                item.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                item.classList.remove('drag-over-top', 'drag-over-bottom');
+
+                const draggedId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                if (draggedId === layer.id) return;
+
+                const rect = item.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const insertBefore = y < rect.height / 2;
+
+                const draggedEl = container.querySelector(`[data-layer-id="${draggedId}"]`);
+                if (!draggedEl) return;
+
+                container.removeChild(draggedEl);
+
+                if (insertBefore) {
+                    container.insertBefore(draggedEl, item);
+                } else {
+                    container.insertBefore(draggedEl, item.nextSibling);
+                }
+
+                this.syncLayersFromDOM();
+            });
+
+            item.addEventListener('dragend', () => {
+                document.querySelectorAll('.layer-item').forEach(el => {
+                    el.classList.remove('dragging', 'drag-over-top', 'drag-over-bottom');
+                });
+            });
+
             const visibilityBtn = document.createElement('button');
             visibilityBtn.className = 'layer-visibility' + (layer.visible ? '' : ' hidden');
             visibilityBtn.innerHTML = layer.visible ? '👁' : '🚫';
@@ -677,7 +735,7 @@ class PaintApp {
                 e.stopPropagation();
                 this.toggleLayerVisibility(index);
             };
-            
+
             const preview = document.createElement('div');
             preview.className = 'layer-preview';
             const previewCanvas = document.createElement('canvas');
@@ -686,7 +744,7 @@ class PaintApp {
             const pctx = previewCanvas.getContext('2d');
             pctx.drawImage(layer.canvas, 0, 0, 40, 40);
             preview.appendChild(previewCanvas);
-            
+
             const info = document.createElement('div');
             info.className = 'layer-info';
             const nameInput = document.createElement('input');
@@ -694,15 +752,40 @@ class PaintApp {
             nameInput.value = layer.name;
             nameInput.onchange = (e) => { layer.name = e.target.value; };
             info.appendChild(nameInput);
-            
+
             item.appendChild(visibilityBtn);
             item.appendChild(preview);
             item.appendChild(info);
             container.appendChild(item);
         });
-        
-        document.getElementById('layer-opacity').value = 
+
+        document.getElementById('layer-opacity').value =
             (this.getActiveLayer()?.opacity || 1) * 100;
+    }
+
+    syncLayersFromDOM() {
+        const container = document.getElementById('layers-list');
+        const items = container.querySelectorAll('.layer-item');
+        const newOrder = [];
+
+        items.forEach(el => {
+            const id = parseInt(el.dataset.layerId, 10);
+            const layer = this.layers.find(l => l.id === id);
+            if (layer) newOrder.push(layer);
+        });
+
+        // DOM shows reversed order (top layer first), reverse to get array order
+        this.layers = newOrder.reverse();
+
+        // Update active layer index
+        const activeId = this.getActiveLayer()?.id;
+        this.activeLayerIndex = this.layers.findIndex(l => l.id === activeId);
+        if (this.activeLayerIndex === -1) this.activeLayerIndex = 0;
+
+        this.saveState();
+        this.renderAllLayers();
+        this.updateLayersPanel();
+        this.updateStatusBar();
     }
     
     renderAllLayers() {

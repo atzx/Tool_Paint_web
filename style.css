@@ -465,6 +465,22 @@ body {
     background: var(--bg-active);
 }
 
+.layer-item[draggable="true"] {
+    cursor: grab;
+}
+
+.layer-item.dragging {
+    opacity: 0.4;
+}
+
+.layer-item.drag-over-top {
+    box-shadow: 0 -3px 0 var(--accent);
+}
+
+.layer-item.drag-over-bottom {
+    box-shadow: 0 3px 0 var(--accent);
+}
+
 .layer-visibility {
     width: 20px;
     height: 20px;
