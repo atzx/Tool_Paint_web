@@ -265,6 +265,14 @@ class PaintApp {
         workspace.addEventListener('dragleave', (e) => { e.preventDefault(); workspace.classList.remove('drag-over'); });
         workspace.addEventListener('drop', (e) => { e.preventDefault(); workspace.classList.remove('drag-over'); this.handleDropImage(e); });
 
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            const isLight = document.body.getAttribute('data-theme') === 'light';
+            document.body.setAttribute('data-theme', isLight ? '' : 'light');
+            themeToggle.textContent = isLight ? '🌙' : '☀️';
+        });
+
         // Fonts dialog drag
         this.initFontsDrag();
     }
