@@ -5,6 +5,253 @@
 
 const APP_VERSION = '1.1.0';
 
+const TRANSLATIONS = {
+    es: {
+        'menu.file': 'Archivo',
+        'menu.edit': 'Edición',
+        'menu.view': 'Ver',
+        'menu.image': 'Imagen',
+        'menu.help': 'Ayuda',
+        'menu.extras': 'Extras',
+        'menu.language': 'Lenguaje',
+        'menu.default': 'Default',
+        'menu.new': 'Nuevo',
+        'menu.open': 'Abrir...',
+        'menu.savePng': 'Guardar como PNG',
+        'menu.saveJpg': 'Guardar como JPG',
+        'menu.exportLayer': 'Exportar capa actual',
+        'menu.undo': 'Deshacer (Ctrl+Z)',
+        'menu.redo': 'Rehacer (Ctrl+Y)',
+        'menu.cut': 'Cortar (Ctrl+X)',
+        'menu.copy': 'Copiar (Ctrl+C)',
+        'menu.paste': 'Pegar (Ctrl+V)',
+        'menu.selectAll': 'Seleccionar todo',
+        'menu.deselect': 'Deseleccionar',
+        'menu.clearCanvas': 'Limpiar Canvas',
+        'menu.zoomIn': 'Acercar (+)',
+        'menu.zoomOut': 'Alejar (-)',
+        'menu.zoomReset': 'Restablecer zoom',
+        'menu.toggleGrid': 'Mostrar/Ocultar cuadrícula',
+        'menu.invert': 'Invertir Colores (⌘I)',
+        'menu.aboutApp': 'Acerca de Tool Paint Web',
+
+        'toolbar.tools': 'Herramientas',
+        'toolbar.shapes': 'Formas',
+        'toolbar.selection': 'Selección',
+        'toolbar.text': 'Texto',
+        'toolbar.backgrounds': 'Backgrounds',
+        'toolbar.properties': 'Propiedades',
+
+        'tooltips.brush': 'Pincel (B)',
+        'tooltips.selector': 'Selector (V)',
+        'tooltips.pencil': 'Lápiz (P)',
+        'tooltips.eraser': 'Borrador (E)',
+        'tooltips.bucket': 'Rellenar (F)',
+        'tooltips.picker': 'Cuentagotas (I)',
+        'tooltips.line': 'Línea (L)',
+        'tooltips.rect': 'Rectángulo (R)',
+        'tooltips.circle': 'Círculo (C)',
+        'tooltips.polygon': 'Polígono (O)',
+        'tooltips.roundRect': 'Rectángulo redondeado (U)',
+        'tooltips.ellipse': 'Elipse (J)',
+        'tooltips.selectRect': 'Selección rectangular (M)',
+        'tooltips.selectLasso': 'Lazo (S)',
+        'tooltips.selectWand': 'Varita mágica (W)',
+        'tooltips.crop': 'Recortar (R)',
+        'tooltips.text': 'Texto (T)',
+
+        'theme.toggle': 'Cambiar tema',
+
+        'tools.brush': 'Pincel',
+        'tools.selector': 'Selector',
+        'tools.pencil': 'Lápiz',
+        'tools.eraser': 'Borrador',
+        'tools.bucket': 'Rellenar',
+        'tools.picker': 'Cuentagotas',
+        'tools.line': 'Línea',
+        'tools.rect': 'Rectángulo',
+        'tools.round-rect': 'Rectángulo redondeado',
+        'tools.circle': 'Círculo',
+        'tools.polygon': 'Polígono',
+        'tools.ellipse': 'Elipse',
+        'tools.select-rect': 'Selección rectangular',
+        'tools.select-lasso': 'Lazo',
+        'tools.select-wand': 'Varita mágica',
+        'tools.crop': 'Recortar',
+        'tools.text': 'Texto',
+
+        'properties.primaryColor': 'Color principal',
+        'properties.secondaryColor': 'Color secundario',
+        'properties.size': 'Grosor',
+        'properties.opacity': 'Opacidad',
+        'properties.fillShape': 'Rellenar formas',
+        'properties.wandTolerance': 'Tolerancia varita',
+
+        'layers.title': 'Capas',
+        'layers.deleteActive': 'Eliminar capa activa',
+        'layers.newLayer': 'Nueva capa',
+        'layers.deleteLayer': 'Eliminar capa',
+        'layers.layerOpacity': 'Opacidad de capa',
+        'layers.mergeDown': 'Fusionar abajo',
+
+        'status.position': 'Posición',
+        'status.size': 'Tamaño',
+        'status.tool': 'Herramienta',
+
+        'dialog.newDocument': 'Nuevo documento',
+        'dialog.width': 'Ancho',
+        'dialog.height': 'Alto',
+        'dialog.background': 'Fondo',
+        'dialog.transparent': 'Transparente',
+        'dialog.white': 'Blanco',
+        'dialog.black': 'Negro',
+        'dialog.create': 'Crear',
+        'dialog.cancel': 'Cancelar',
+
+        'fonts.title': 'Fonts',
+        'fonts.apply': 'Apply',
+        'fonts.cancel': 'Cancel',
+        'text.placeholder': 'Escribe aquí...',
+
+        'about.version': 'Version ',
+        'about.author': 'Tool Paint remake por Antares Martinez',
+        'about.feedback': 'Feedback: ',
+        'about.donate': 'Donate: ',
+        'about.donatePlaceholder': 'Pendiente...En Construcción...',
+        'about.ok': 'OK',
+
+        'layer.defaultName': 'Capa de fondo',
+        'layer.pastedImage': 'Imagen pegada',
+        'layer.textLayer': 'Texto',
+        'layer.newLayer': 'Capa ',
+        'alert.minLayers': 'Debe mantener al menos una capa',
+        'clipboard.copyError': 'No se pudo copiar al portapapeles',
+        'clipboard.notSupported': 'API de portapapeles no soportada',
+    },
+    en: {
+        'menu.file': 'File',
+        'menu.edit': 'Edit',
+        'menu.view': 'View',
+        'menu.image': 'Image',
+        'menu.help': 'Help',
+        'menu.extras': 'Extras',
+        'menu.language': 'Language',
+        'menu.default': 'Default',
+        'menu.new': 'New',
+        'menu.open': 'Open...',
+        'menu.savePng': 'Save as PNG',
+        'menu.saveJpg': 'Save as JPG',
+        'menu.exportLayer': 'Export current layer',
+        'menu.undo': 'Undo (Ctrl+Z)',
+        'menu.redo': 'Redo (Ctrl+Y)',
+        'menu.cut': 'Cut (Ctrl+X)',
+        'menu.copy': 'Copy (Ctrl+C)',
+        'menu.paste': 'Paste (Ctrl+V)',
+        'menu.selectAll': 'Select All',
+        'menu.deselect': 'Deselect',
+        'menu.clearCanvas': 'Clear Canvas',
+        'menu.zoomIn': 'Zoom In (+)',
+        'menu.zoomOut': 'Zoom Out (-)',
+        'menu.zoomReset': 'Reset Zoom',
+        'menu.toggleGrid': 'Show/Hide Grid',
+        'menu.invert': 'Invert Colors (⌘I)',
+        'menu.aboutApp': 'About Tool Paint Web',
+
+        'toolbar.tools': 'Tools',
+        'toolbar.shapes': 'Shapes',
+        'toolbar.selection': 'Selection',
+        'toolbar.text': 'Text',
+        'toolbar.backgrounds': 'Backgrounds',
+        'toolbar.properties': 'Properties',
+
+        'tooltips.brush': 'Brush (B)',
+        'tooltips.selector': 'Select (V)',
+        'tooltips.pencil': 'Pencil (P)',
+        'tooltips.eraser': 'Eraser (E)',
+        'tooltips.bucket': 'Fill (F)',
+        'tooltips.picker': 'Eyedropper (I)',
+        'tooltips.line': 'Line (L)',
+        'tooltips.rect': 'Rectangle (R)',
+        'tooltips.circle': 'Circle (C)',
+        'tooltips.polygon': 'Polygon (O)',
+        'tooltips.roundRect': 'Rounded Rectangle (U)',
+        'tooltips.ellipse': 'Ellipse (J)',
+        'tooltips.selectRect': 'Rectangular Selection (M)',
+        'tooltips.selectLasso': 'Lasso (S)',
+        'tooltips.selectWand': 'Magic Wand (W)',
+        'tooltips.crop': 'Crop (R)',
+        'tooltips.text': 'Text (T)',
+
+        'theme.toggle': 'Toggle theme',
+
+        'tools.brush': 'Brush',
+        'tools.selector': 'Select',
+        'tools.pencil': 'Pencil',
+        'tools.eraser': 'Eraser',
+        'tools.bucket': 'Fill',
+        'tools.picker': 'Eyedropper',
+        'tools.line': 'Line',
+        'tools.rect': 'Rectangle',
+        'tools.round-rect': 'Rounded Rectangle',
+        'tools.circle': 'Circle',
+        'tools.polygon': 'Polygon',
+        'tools.ellipse': 'Ellipse',
+        'tools.select-rect': 'Rectangular Selection',
+        'tools.select-lasso': 'Lasso',
+        'tools.select-wand': 'Magic Wand',
+        'tools.crop': 'Crop',
+        'tools.text': 'Text',
+
+        'properties.primaryColor': 'Primary Color',
+        'properties.secondaryColor': 'Secondary Color',
+        'properties.size': 'Size',
+        'properties.opacity': 'Opacity',
+        'properties.fillShape': 'Fill shapes',
+        'properties.wandTolerance': 'Wand Tolerance',
+
+        'layers.title': 'Layers',
+        'layers.deleteActive': 'Delete active layer',
+        'layers.newLayer': 'New layer',
+        'layers.deleteLayer': 'Delete layer',
+        'layers.layerOpacity': 'Layer Opacity',
+        'layers.mergeDown': 'Merge Down',
+
+        'status.position': 'Position',
+        'status.size': 'Size',
+        'status.tool': 'Tool',
+
+        'dialog.newDocument': 'New Document',
+        'dialog.width': 'Width',
+        'dialog.height': 'Height',
+        'dialog.background': 'Background',
+        'dialog.transparent': 'Transparent',
+        'dialog.white': 'White',
+        'dialog.black': 'Black',
+        'dialog.create': 'Create',
+        'dialog.cancel': 'Cancel',
+
+        'fonts.title': 'Fonts',
+        'fonts.apply': 'Apply',
+        'fonts.cancel': 'Cancel',
+        'text.placeholder': 'Type here...',
+
+        'about.version': 'Version ',
+        'about.author': 'Tool Paint remake by Antares Martinez',
+        'about.feedback': 'Feedback: ',
+        'about.donate': 'Donate: ',
+        'about.donatePlaceholder': 'Pending...Under Construction...',
+        'about.ok': 'OK',
+
+        'layer.defaultName': 'Background layer',
+        'layer.pastedImage': 'Pasted image',
+        'layer.textLayer': 'Text',
+        'layer.newLayer': 'Layer ',
+        'alert.minLayers': 'You must keep at least one layer',
+        'clipboard.copyError': 'Could not copy to clipboard',
+        'clipboard.notSupported': 'Clipboard API not supported',
+    }
+};
+
 class PaintApp {
     constructor() {
         // Dimensiones del canvas
@@ -54,6 +301,9 @@ class PaintApp {
         this.textModeActive = false;
         this.editingTextId = null;
 
+        // Language
+        this.currentLang = 'es';
+
         // Selector tool
         this.selectorPhase = null; // 'select' | 'move' | null
         this.moveCanvas = null;
@@ -68,9 +318,10 @@ class PaintApp {
     init() {
         this.setupCanvas();
         this.setupEventListeners();
-        this.createNewLayer('Capa de fondo');
+        this.createNewLayer(this.t('layer.defaultName'));
         this.saveState(); // Save initial blank state
         this.updateUI();
+        this.applyTranslations();
         // Default: primary color selected
         setTimeout(() => this.selectColorPicker('primary'), 0);
     }
@@ -279,6 +530,11 @@ class PaintApp {
             themeToggle.textContent = isLight ? '🌙' : '☀️';
         });
 
+        // Language buttons
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.setLanguage(btn.dataset.lang));
+        });
+
         // Fonts dialog drag
         this.initFontsDrag();
     }
@@ -299,7 +555,7 @@ class PaintApp {
         
         const layer = {
             id: ++this.layerIdCounter,
-            name: name || `Capa ${this.layers.length + 1}`,
+            name: name || (this.t('layer.newLayer') + (this.layers.length + 1)),
             canvas: canvas,
             ctx: ctx,
             visible: true,
@@ -331,7 +587,7 @@ class PaintApp {
     
     deleteLayer() {
         if (this.layers.length <= 1) {
-            alert('Debe mantener al menos una capa');
+            alert(this.t('alert.minLayers'));
             return;
         }
 
@@ -463,28 +719,9 @@ class PaintApp {
             if (btn.dataset.tool === tool) btn.classList.add('active');
         });
         
-        const toolNames = {
-            'brush': 'Pincel',
-            'selector': 'Selector',
-            'pencil': 'Lápiz',
-            'eraser': 'Borrador',
-            'bucket': 'Rellenar',
-            'picker': 'Cuentagotas',
-            'line': 'Línea',
-            'rect': 'Rectángulo',
-            'round-rect': 'Rectángulo redondeado',
-            'circle': 'Círculo',
-            'polygon': 'Polígono',
-            'ellipse': 'Elipse',
-            'select-rect': 'Selección rectangular',
-            'select-lasso': 'Lazo',
-            'select-wand': 'Varita mágica',
-            'crop': 'Recortar',
-            'text': 'Texto'
-        };
-        
-        document.getElementById('status-tool').textContent = 
-            'Herramienta: ' + (toolNames[tool] || tool);
+        const toolKey = 'tools.' + tool;
+        document.getElementById('status-tool').textContent =
+            this.t('status.tool') + ': ' + this.t(toolKey);
         
         // Reset polygon points and lasso points
         this.polygonPoints = [];
@@ -615,8 +852,8 @@ class PaintApp {
     handleMouseMove(e) {
         const pos = this.getMousePos(e);
         
-        document.getElementById('status-position').textContent = 
-            `Posición: ${Math.floor(pos.x)}, ${Math.floor(pos.y)}`;
+        document.getElementById('status-position').textContent =
+            `${this.t('status.position')}: ${Math.floor(pos.x)}, ${Math.floor(pos.y)}`;
         
         if (!this.isDrawing) return;
         
@@ -1281,12 +1518,12 @@ class PaintApp {
                 tempCanvas.toBlob(blob => {
                     if (blob) {
                         const item = new ClipboardItem({'image/png': blob});
-                        navigator.clipboard.write([item]).catch(err => console.log('No se pudo copiar al portapapeles:', err));
+                        navigator.clipboard.write([item]).catch(err => console.log(this.t('clipboard.copyError'), err));
                     }
                 });
             }
         } catch (err) {
-            console.log('API de portapapeles no soportada');
+            console.log(this.t('clipboard.notSupported'));
         }
     }
     
@@ -1297,7 +1534,7 @@ class PaintApp {
     }
 
     pasteFromClipboard(source) {
-        const layer = this.createNewLayer('Imagen pegada');
+        const layer = this.createNewLayer(this.t('layer.pastedImage'));
         const fit = this.getImageFit(source.width, source.height);
         layer.ctx.drawImage(source, fit.offsetX, fit.offsetY, fit.width, fit.height);
         this.renderAllLayers();
@@ -1521,7 +1758,7 @@ class PaintApp {
                 }
             } else {
                 // New text — create a new layer
-                const layer = this.createNewLayer('Texto');
+                const layer = this.createNewLayer(this.t('layer.textLayer'));
                 this.renderTextOnLayer(layer.ctx, text, this.textBounds, { font, size, bold, italic, underline, vertical }); // color from getActiveColor()
                 this.renderAllLayers();
                 this.saveState();
@@ -1696,6 +1933,50 @@ class PaintApp {
         dialog.style.display = 'block';
     }
 
+    // ====================
+    // LANGUAGE
+    // ====================
+
+    t(key) {
+        const lang = TRANSLATIONS[this.currentLang];
+        return lang && lang[key] !== undefined ? lang[key] : key;
+    }
+
+    setLanguage(lang) {
+        this.currentLang = lang;
+        this.applyTranslations();
+
+        // Update status bar tool name dynamically
+        const toolNames = {};
+        for (const key of Object.keys(TRANSLATIONS.es)) {
+            if (key.startsWith('tools.')) {
+                toolNames[key.slice(6)] = this.t(key);
+            }
+        }
+        document.getElementById('status-tool').textContent =
+            this.t('status.tool') + ': ' + (toolNames[this.currentTool] || this.currentTool);
+    }
+
+    applyTranslations() {
+        // Update all elements with data-i18n
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            el.textContent = this.t(key);
+        });
+
+        // Update all elements with data-i18n-title (tooltips)
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.dataset.i18nTitle;
+            el.title = this.t(key);
+        });
+
+        // Update all elements with data-i18n-placeholder
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.dataset.i18nPlaceholder;
+            el.placeholder = this.t(key);
+        });
+    }
+
     initFontsDrag() {
         const header = document.getElementById('fonts-header');
         const dialog = document.getElementById('dialog-text');
@@ -1810,7 +2091,7 @@ class PaintApp {
         this.historyStep = -1;
         
         this.resizeCanvas();
-        this.createNewLayer('Capa de fondo');
+        this.createNewLayer(this.t('layer.defaultName'));
         
         if (bg !== 'transparent') {
             const layer = this.getActiveLayer();
@@ -2013,7 +2294,7 @@ class PaintApp {
     
     updateUI() {
         document.getElementById('status-size').textContent =
-            `Tamaño: ${this.canvasWidth} x ${this.canvasHeight}`;
+            `${this.t('status.size')}: ${this.canvasWidth} x ${this.canvasHeight}`;
     }
 
     showAbout() {
@@ -2195,7 +2476,7 @@ class PaintApp {
         this.tempCtx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.deselect();
 
-        this.createNewLayer('Capa de fondo');
+        this.createNewLayer(this.t('layer.defaultName'));
         this.renderAllLayers();
         this.updateLayersPanel();
         this.saveState();
