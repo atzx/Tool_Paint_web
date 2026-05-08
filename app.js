@@ -2341,83 +2341,134 @@ class PaintApp {
     // FLIP / ROTATE
     // ====================
 
-    flipVertical() {
+    getContentBounds() {
         const layer = this.getActiveLayer();
-        if (!layer) return;
+        if (!layer) return null;
+
+        // If there's a selection, use it
+        if (this.selection) {
+            return { x: this.selection.x, y: this.selection.y, width: this.selection.width, height: this.selection.height };
+        }
+
+        // Auto-detect non-transparent content bounds
+        const imageData = layer.ctx.getImageData(0, 0, this.canvasWidth, this.canvasHeight);
+        const data = imageData.data;
+        let minX = this.canvasWidth, minY = this.canvasHeight, maxX = 0, maxY = 0;
+
+        for (let y = 0; y < this.canvasHeight; y++) {
+            for (let x = 0; x < this.canvasWidth; x++) {
+                if (data[(y * this.canvasWidth + x) * 4 + 3] > 0) {
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                }
+            }
+        }
+
+        if (minX > maxX) return null; // Empty layer
+
+        return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    }
+
+    flipVertical() {
+        const bounds = this.getContentBounds();
+        if (!bounds) return;
         this.deselect();
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = this.canvasWidth;
-        tempCanvas.height = this.canvasHeight;
-        const tctx = tempCanvas.getContext('2d');
-        tctx.translate(0, this.canvasHeight);
-        tctx.scale(1, -1);
-        tctx.drawImage(layer.canvas, 0, 0);
-        layer.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-        layer.ctx.drawImage(tempCanvas, 0, 0);
+
+        const layer = this.getActiveLayer();
+        // Extract content within bounds
+        const temp = document.createElement('canvas');
+        temp.width = bounds.width;
+        temp.height = bounds.height;
+        const tctx = temp.getContext('2d');
+        tctx.drawImage(layer.canvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, bounds.width, bounds.height);
+
+        // Clear the original area
+        layer.ctx.clearRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        // Flip and redraw within the same bounds
+        layer.ctx.save();
+        layer.ctx.translate(bounds.x, bounds.y + bounds.height);
+        layer.ctx.scale(1, -1);
+        layer.ctx.drawImage(temp, 0, 0);
+        layer.ctx.restore();
+
         this.renderAllLayers();
         this.saveState();
     }
 
     flipHorizontal() {
-        const layer = this.getActiveLayer();
-        if (!layer) return;
+        const bounds = this.getContentBounds();
+        if (!bounds) return;
         this.deselect();
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = this.canvasWidth;
-        tempCanvas.height = this.canvasHeight;
-        const tctx = tempCanvas.getContext('2d');
-        tctx.translate(this.canvasWidth, 0);
-        tctx.scale(-1, 1);
-        tctx.drawImage(layer.canvas, 0, 0);
-        layer.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-        layer.ctx.drawImage(tempCanvas, 0, 0);
+
+        const layer = this.getActiveLayer();
+        const temp = document.createElement('canvas');
+        temp.width = bounds.width;
+        temp.height = bounds.height;
+        const tctx = temp.getContext('2d');
+        tctx.drawImage(layer.canvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, bounds.width, bounds.height);
+
+        layer.ctx.clearRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        layer.ctx.save();
+        layer.ctx.translate(bounds.x + bounds.width, bounds.y);
+        layer.ctx.scale(-1, 1);
+        layer.ctx.drawImage(temp, 0, 0);
+        layer.ctx.restore();
+
         this.renderAllLayers();
         this.saveState();
     }
 
     rotateLeft() {
-        if (!this.getActiveLayer()) return;
+        const bounds = this.getContentBounds();
+        if (!bounds) return;
         this.deselect();
-        const newW = this.canvasHeight;
-        const newH = this.canvasWidth;
-        this.layers.forEach(layer => {
-            const temp = document.createElement('canvas');
-            temp.width = newW;
-            temp.height = newH;
-            const tctx = temp.getContext('2d');
-            tctx.translate(0, temp.height);
-            tctx.rotate(-Math.PI / 2);
-            tctx.drawImage(layer.canvas, 0, 0);
-            layer.canvas.width = newW;
-            layer.canvas.height = newH;
-            layer.ctx.drawImage(temp, 0, 0);
-        });
-        this.canvasWidth = newW;
-        this.canvasHeight = newH;
-        this.resizeCanvas();
+
+        const layer = this.getActiveLayer();
+        // Extract content within bounds
+        const temp = document.createElement('canvas');
+        temp.width = bounds.width;
+        temp.height = bounds.height;
+        const tctx = temp.getContext('2d');
+        tctx.drawImage(layer.canvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, bounds.width, bounds.height);
+
+        layer.ctx.clearRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        // Rotate 90° CCW and draw centered at bounds center
+        layer.ctx.save();
+        layer.ctx.translate(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+        layer.ctx.rotate(-Math.PI / 2);
+        layer.ctx.drawImage(temp, -bounds.width / 2, -bounds.height / 2);
+        layer.ctx.restore();
+
+        this.renderAllLayers();
         this.saveState();
     }
 
     rotateRight() {
-        if (!this.getActiveLayer()) return;
+        const bounds = this.getContentBounds();
+        if (!bounds) return;
         this.deselect();
-        const newW = this.canvasHeight;
-        const newH = this.canvasWidth;
-        this.layers.forEach(layer => {
-            const temp = document.createElement('canvas');
-            temp.width = newW;
-            temp.height = newH;
-            const tctx = temp.getContext('2d');
-            tctx.translate(temp.width, 0);
-            tctx.rotate(Math.PI / 2);
-            tctx.drawImage(layer.canvas, 0, 0);
-            layer.canvas.width = newW;
-            layer.canvas.height = newH;
-            layer.ctx.drawImage(temp, 0, 0);
-        });
-        this.canvasWidth = newW;
-        this.canvasHeight = newH;
-        this.resizeCanvas();
+
+        const layer = this.getActiveLayer();
+        const temp = document.createElement('canvas');
+        temp.width = bounds.width;
+        temp.height = bounds.height;
+        const tctx = temp.getContext('2d');
+        tctx.drawImage(layer.canvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, bounds.width, bounds.height);
+
+        layer.ctx.clearRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        layer.ctx.save();
+        layer.ctx.translate(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+        layer.ctx.rotate(Math.PI / 2);
+        layer.ctx.drawImage(temp, -bounds.width / 2, -bounds.height / 2);
+        layer.ctx.restore();
+
+        this.renderAllLayers();
         this.saveState();
     }
 
