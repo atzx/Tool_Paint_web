@@ -35,6 +35,22 @@ body {
     height: 36px;
 }
 
+#app-title {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 0 12px;
+    color: #e0e0e0;
+    user-select: none;
+}
+
+@media (prefers-color-scheme: light) {
+    #app-title {
+        color: #2c2c2c;
+    }
+}
+
 .menu-group {
     position: relative;
 }
