@@ -188,7 +188,8 @@ class PaintApp {
         document.getElementById('btn-zoom-out').addEventListener('click', () => this.zoomOut());
         document.getElementById('btn-zoom-reset').addEventListener('click', () => this.zoomReset());
         document.getElementById('btn-toggle-grid').addEventListener('click', () => this.toggleGrid());
-        
+        document.getElementById('btn-invert').addEventListener('click', () => this.invertColors());
+
         // Layer buttons
         document.getElementById('btn-new-layer').addEventListener('click', () => this.addLayer());
         document.getElementById('btn-delete-layer').addEventListener('click', () => this.deleteLayer());
@@ -1936,6 +1937,10 @@ class PaintApp {
                     e.preventDefault();
                     this.selectAll();
                     break;
+                case 'i':
+                    e.preventDefault();
+                    this.invertColors();
+                    break;
                 case 'o':
                     e.preventDefault();
                     this.openImage();
@@ -2004,6 +2009,25 @@ class PaintApp {
     updateUI() {
         document.getElementById('status-size').textContent =
             `Tamaño: ${this.canvasWidth} x ${this.canvasHeight}`;
+    }
+
+    invertColors() {
+        const layer = this.getActiveLayer();
+        if (!layer) return;
+
+        const imageData = layer.ctx.getImageData(0, 0, this.canvasWidth, this.canvasHeight);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+            data[i]     = 255 - data[i];     // R
+            data[i + 1] = 255 - data[i + 1]; // G
+            data[i + 2] = 255 - data[i + 2]; // B
+            // data[i + 3] alpha unchanged
+        }
+
+        layer.ctx.putImageData(imageData, 0, 0);
+        this.renderAllLayers();
+        this.saveState();
     }
 
     // ====================
