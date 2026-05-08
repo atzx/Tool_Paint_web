@@ -53,6 +53,12 @@
                     <button id="btn-invert">Invertir Colores (⌘I)</button>
                 </div>
             </div>
+            <div class="menu-group">
+                <button class="menu-btn" id="menu-help">Ayuda</button>
+                <div class="menu-dropdown" id="dropdown-help">
+                    <button id="btn-about">Acerca de Tool Paint Web</button>
+                </div>
+            </div>
             <button id="theme-toggle" title="Cambiar tema">🌙</button>
             <span id="app-title">Tool Paint Web</span>
         </div>
@@ -297,6 +303,46 @@
                 <div class="fonts-actions">
                     <button id="btn-apply-text">Apply</button>
                     <button id="btn-cancel-text">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diálogo Acerca de -->
+        <div id="dialog-about" class="modal" style="display: none;">
+            <div class="modal-content about-content">
+                <div class="about-header">
+                    <h3>Tool Paint Web</h3>
+                    <button id="btn-about-close-x" class="about-close-x" title="Cerrar">✕</button>
+                </div>
+                <div class="about-body">
+                    <div class="about-icon">
+                        <svg viewBox="0 0 80 80" width="80" height="80">
+                            <rect x="8" y="8" width="64" height="64" rx="12" fill="#007acc"/>
+                            <path d="M22 52l8-24 8 16 8-24 12 32" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="28" cy="28" r="4" fill="#ffd700"/>
+                            <circle cx="52" cy="36" r="3" fill="#ff6b6b"/>
+                            <circle cx="40" cy="48" r="3.5" fill="#69db7c"/>
+                            <circle cx="54" cy="52" r="2.5" fill="#74c0fc"/>
+                        </svg>
+                    </div>
+                    <div class="about-info">
+                        <div class="about-app-name">Tool Paint Web</div>
+                        <div class="about-version">
+                            <span>Version </span><span id="about-version-number">1.0.0</span>
+                        </div>
+                        <div class="about-author">Tool Paint remake por Antares Martinez</div>
+                        <div class="about-links">
+                            <span>Feedback: </span>
+                            <a href="https://github.com/Antarezx/Tool_Paint_web" target="_blank" rel="noopener">Github</a>
+                        </div>
+                        <div class="about-links">
+                            <span>Donate: </span>
+                            <span class="about-donate">Pendiente…En Construcción…</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-footer">
+                    <button id="btn-about-ok" class="about-ok-btn">OK</button>
                 </div>
             </div>
         </div>

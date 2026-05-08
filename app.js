@@ -3,6 +3,8 @@
  * Sistema de capas, herramientas de dibujo, selección, texto y más
  */
 
+const APP_VERSION = '1.1.0';
+
 class PaintApp {
     constructor() {
         // Dimensiones del canvas
@@ -189,6 +191,9 @@ class PaintApp {
         document.getElementById('btn-zoom-reset').addEventListener('click', () => this.zoomReset());
         document.getElementById('btn-toggle-grid').addEventListener('click', () => this.toggleGrid());
         document.getElementById('btn-invert').addEventListener('click', () => this.invertColors());
+        document.getElementById('btn-about').addEventListener('click', () => this.showAbout());
+        document.getElementById('btn-about-ok').addEventListener('click', () => this.hideAbout());
+        document.getElementById('btn-about-close-x').addEventListener('click', () => this.hideAbout());
 
         // Layer buttons
         document.getElementById('btn-new-layer').addEventListener('click', () => this.addLayer());
@@ -2009,6 +2014,15 @@ class PaintApp {
     updateUI() {
         document.getElementById('status-size').textContent =
             `Tamaño: ${this.canvasWidth} x ${this.canvasHeight}`;
+    }
+
+    showAbout() {
+        document.getElementById('about-version-number').textContent = APP_VERSION;
+        document.getElementById('dialog-about').style.display = 'flex';
+    }
+
+    hideAbout() {
+        document.getElementById('dialog-about').style.display = 'none';
     }
 
     invertColors() {
