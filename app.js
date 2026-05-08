@@ -59,6 +59,10 @@ const TRANSLATIONS = {
         'tooltips.selectWand': 'Varita mágica (W)',
         'tooltips.crop': 'Recortar (R)',
         'tooltips.text': 'Texto (T)',
+        'tooltips.flipV': 'Voltear verticalmente',
+        'tooltips.flipH': 'Voltear horizontalmente',
+        'tooltips.rotateL': 'Rotar 90° izquierda',
+        'tooltips.rotateR': 'Rotar 90° derecha',
 
         'theme.toggle': 'Cambiar tema',
 
@@ -181,6 +185,10 @@ const TRANSLATIONS = {
         'tooltips.selectWand': 'Magic Wand (W)',
         'tooltips.crop': 'Crop (R)',
         'tooltips.text': 'Text (T)',
+        'tooltips.flipV': 'Flip Vertical',
+        'tooltips.flipH': 'Flip Horizontal',
+        'tooltips.rotateL': 'Rotate 90° Left',
+        'tooltips.rotateR': 'Rotate 90° Right',
 
         'theme.toggle': 'Toggle theme',
 
@@ -442,6 +450,10 @@ class PaintApp {
         document.getElementById('btn-zoom-reset').addEventListener('click', () => this.zoomReset());
         document.getElementById('btn-toggle-grid').addEventListener('click', () => this.toggleGrid());
         document.getElementById('btn-invert').addEventListener('click', () => this.invertColors());
+        document.getElementById('btn-flip-v').addEventListener('click', () => this.flipVertical());
+        document.getElementById('btn-flip-h').addEventListener('click', () => this.flipHorizontal());
+        document.getElementById('btn-rotate-l').addEventListener('click', () => this.rotateLeft());
+        document.getElementById('btn-rotate-r').addEventListener('click', () => this.rotateRight());
         document.getElementById('btn-about').addEventListener('click', () => this.showAbout());
         document.getElementById('btn-about-ok').addEventListener('click', () => this.hideAbout());
         document.getElementById('btn-about-close-x').addEventListener('click', () => this.hideAbout());
@@ -2322,6 +2334,90 @@ class PaintApp {
 
         layer.ctx.putImageData(imageData, 0, 0);
         this.renderAllLayers();
+        this.saveState();
+    }
+
+    // ====================
+    // FLIP / ROTATE
+    // ====================
+
+    flipVertical() {
+        const layer = this.getActiveLayer();
+        if (!layer) return;
+        this.deselect();
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = this.canvasWidth;
+        tempCanvas.height = this.canvasHeight;
+        const tctx = tempCanvas.getContext('2d');
+        tctx.translate(0, this.canvasHeight);
+        tctx.scale(1, -1);
+        tctx.drawImage(layer.canvas, 0, 0);
+        layer.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        layer.ctx.drawImage(tempCanvas, 0, 0);
+        this.renderAllLayers();
+        this.saveState();
+    }
+
+    flipHorizontal() {
+        const layer = this.getActiveLayer();
+        if (!layer) return;
+        this.deselect();
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = this.canvasWidth;
+        tempCanvas.height = this.canvasHeight;
+        const tctx = tempCanvas.getContext('2d');
+        tctx.translate(this.canvasWidth, 0);
+        tctx.scale(-1, 1);
+        tctx.drawImage(layer.canvas, 0, 0);
+        layer.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        layer.ctx.drawImage(tempCanvas, 0, 0);
+        this.renderAllLayers();
+        this.saveState();
+    }
+
+    rotateLeft() {
+        if (!this.getActiveLayer()) return;
+        this.deselect();
+        const newW = this.canvasHeight;
+        const newH = this.canvasWidth;
+        this.layers.forEach(layer => {
+            const temp = document.createElement('canvas');
+            temp.width = newW;
+            temp.height = newH;
+            const tctx = temp.getContext('2d');
+            tctx.translate(0, temp.height);
+            tctx.rotate(-Math.PI / 2);
+            tctx.drawImage(layer.canvas, 0, 0);
+            layer.canvas.width = newW;
+            layer.canvas.height = newH;
+            layer.ctx.drawImage(temp, 0, 0);
+        });
+        this.canvasWidth = newW;
+        this.canvasHeight = newH;
+        this.resizeCanvas();
+        this.saveState();
+    }
+
+    rotateRight() {
+        if (!this.getActiveLayer()) return;
+        this.deselect();
+        const newW = this.canvasHeight;
+        const newH = this.canvasWidth;
+        this.layers.forEach(layer => {
+            const temp = document.createElement('canvas');
+            temp.width = newW;
+            temp.height = newH;
+            const tctx = temp.getContext('2d');
+            tctx.translate(temp.width, 0);
+            tctx.rotate(Math.PI / 2);
+            tctx.drawImage(layer.canvas, 0, 0);
+            layer.canvas.width = newW;
+            layer.canvas.height = newH;
+            layer.ctx.drawImage(temp, 0, 0);
+        });
+        this.canvasWidth = newW;
+        this.canvasHeight = newH;
+        this.resizeCanvas();
         this.saveState();
     }
 
